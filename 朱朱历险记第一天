@@ -1,0 +1,208 @@
+数据库管理：
+
+装包: 源码  RPM  包的来源   软件的版本： xxx.主.次.修订次数 （次版本为偶数代表稳定版，为奇数代表测试版）
+                 
+主流数据库服务软件：   RDBMS :Oracle  DB2   MySQL  MariaDB  SQL SERVER (按照一定的规则存储数据) 
+                   NoSQL :Redis Mongodb Memcache  (key  value)
+Mysql的特点：开源且跨平台（unix linux  windows都能装），支持主流的编程语言（php java python ..），可移植性好（系统只要有C运行环境）
+
+数据库服务通常和网站服务一起使用：LNMP
+
+开源软件：开源不等于免费，无保障
+商业软件：付费，有售后保障
+
+
+rpm装包   常用选项：   -U：升级安装 
+			-a: 所有包
+			-c:查询配置文件
+			-h：以#显示程序包管理执行进度; 每个#表示2%的进度
+			-i：输出程序信息
+			-v：显示附加信息			
+			–nodeps 忽略安装关系
+           常用组合： rpm -ivh  装包
+                  rpm -Uvh 升级一个包
+                  rpm -e  删除包
+                
+rpm -q  < rpm package name>  //查询一个包是否安装 
+rpm -qi < rpm package name>  //得到被安装的包的信息
+rpm -ql < rpm package name>  //列出该包中有哪些文件
+rpm -qf                      //列出服务器上的一个文件属于哪一个RPM包
+
+搭建mysql数据库服务器：   
+1.装包
+删除系统自带mariadb mysql数据库软件  (避免冲突)
+#rpm  -qa  |  grep   -i  mariadb
+#systemctl  stop  mariadb
+#rpm  -e  --nodeps(不会删除其他依赖包)   mariadb-server   mariadb
+#rm  -rf  /etc/my.cnf  （配置文件）
+#rm  -rf  /var/lib/mysql  （数据库目录） 
+#  yum   -y   install    perl-JSON   
+#  rpm  -Uvh    mysql-community-*.rpm
+#  rpm  -qa   | grep  -i   mysql
+
+2.修改配置文件(不需要修改配置文件 按默认配置运行即可)
+ls  /etc/my.cnf
+
+3.启动服务
+#systemctl   start  mysqld
+# systemctl   enable  mysqld
+
+查看服务信息：
+主配置文件：/etc/my.cnf 
+数据库目录：/var/lib/mysql 
+默认端口号：3306   ss -nultp | grep mysqld
+    进程名：mysqld   ps -C mysqld
+ 传输协议 ：TCP
+进程所有者 ：mysql
+进程所属组 ：mysql
+     
+
+把数据存储到数据库服务器上的过程（在网页目录下的一个脚本里完成 eg：/var/www/html/a.php）：
+1、连接数据库服务器:   mysql -h+Ip -u+User -p+Passwd
+2、创建库:   相当于系统下的文件夹   
+3、创建表:   相当于系统的文件
+4、插入数据：  文件里的行
+5、断开连接:  quit
+
+
+数据库服务的基本使用:
+首次登录密码在安装时随机生成，存储在错误日志文件里 /var/log/mysqld.log
+1 使用初始密码在本机连接数据库服务
+# grep password /var/log/mysqld.log
+# mysql   -hlocalhost   -uroot   -pCSVePU4UaZ%l
+
+2 改默认密码无法做任何操作，但是修改密码有长度，数字，字母的设置规则，不方便记忆，可修改密码策略：
+# sql>set global validate_password_policy=0; 只检查密码的长度  
+# sql>set global validate_password_length=6; 密码长度不能小于6个字符
+# sql>alter  user   root@"localhost"  identified by "123456"； 修改密码
+
+3 让密码策略永久生效
+#vim  /etc/my.cnf
+[mysqld]
+validate_password_policy=0
+validate_password_length=6
+保存退出
+#systemctl   restart  mysqld
+
+库管理命令：
+查看库：show databases;
+创建库：create  database  库名；
+删除库：drop database 库名；
+切换库：use 库名；
+查看当前所在库select database ();
+查看表：show tables;
+
+数据库的命名规则：
+       – 可以使用数字 / 字母 / 下划线,但不能纯数字
+       – 区分大小写,具有唯一性 
+       – 不可使用指令关键字、特殊字符
+
+注意：
+     操作指令不区分大小写(密码、变量值除外)
+     不支持 Tab 键自动补齐
+    DML 数据操作语言
+    \c 可废弃当前编写错的操作指
+
+
+表管理命令：
+
+创建表（一定要在库里创建）：
+  create table 库名.表名(
+        字段名1 字段类型 (宽度)  约束条件 ,
+        字段名2 字段类型 (宽度)  约束条件 ,
+	.. ..
+	字段名 N 字段类型 (宽度) 约束条件
+	);
+  eg：
+   create table studb.stuinfo(
+      name char(10),
+      sex  char(5),
+      age int,
+      tel char(10)
+        );
+显示已有表：show tables；
+查看表结构： desc 表名；
+查看表记录：Select * from 表名 ;
+插入表记录：Insert into 表名 values( 值列表 );
+修改表记录：Update 表名 set 字段 = 值 ; 
+删除表记录：Delete from 表名 ;
+删除表： drop table 表名；
+
+查看建表指令：show create table 表名
+
+支持中文的字符集： utf8，gb2312,big5
+要想表格内容支持中文，在建表最后加上 DEFAULT CHARSET=utf8;
+eg:
+   create table 学生表(姓名 char(12),性别 char(5),年龄 int)DEFAULT CHARSET=utf8；
+   insert into 学生表 values("朱建得","男",21);
+
+
+MySQL数据类型：
+
+一、数值型
+整数：tinyint smallint mediumint int bigint (默认为有符号范围，类型后加 unsigned，可改为无符号范围,就是正数)
+  eg： create table t1(level tinyint);   范围为 -128~127
+       create table t2(level tinyint unsigned);  范围为 0~255
+    
+浮点数：float(单精度)  double(多精度)   
+  eg:  create table t3(pay float(7,2));  范围是 -99999.99～99999.99 (7表示总位数，2表示小数位数)
+      
+
+具体如下表：
+
+  类型           大 小       范围(有符号)     范围(无符号)         用 途
+TINYINT      1 字节        -128~127           0 ~ 255         微小整数
+SMALLINT     2 字节       -32768~32767       0 ~ 65535        小整数
+MEDIUMINT    3 字节       -2^23 ~ 2^23-1      0 ~ 2^24 -1      中整数
+INT          4 字节       -2^31 ~ 2^31 -1      0 ~ 2^32 -1      大整数
+BIGINT       8 字节       -2^63 ~ 2^63 -1     0 ~ 2^64 -1     极大整数
+FLOAT        4 字节                                          单精度浮点数
+DOUBLE       8 字节                                          双精度浮点数
+DECIMAL 对 DECIMAL(M,D) ,其中 M 为有效位数、 D 为小
+数位数, M 应大于 D ,占用 M+2 字节
+
+
+二、字符型
+定长: char( 字符数 )     (浪费了存储空间，但是处理速度快，所以企业大多用这种而不用varchar)
+      – 最大长度 255 字符
+      – 不够指定字符数时在右边用空格补齐 
+      – 字符数断超出时,无法写入数据。
+变长: varchar( 字符数 )  (节省存储空间，但是大量数据时需要占用太多cpu)
+      – 按数据实际大小分配存储空间
+      – 字符数断超出时,无法写入数据。
+大文本类型: text/blob
+      – 字符数大于 65535 存储时使用
+
+
+三、枚举类型 ： 让字段的值 在规定范围内选择
+
+从给定值集合中选择单个值, ENUM    （单选）
+– 定义格式: enum( 值 1, 值 2, 值 N)
+
+从给定值集合中选择一个或多个值, SET  （多选）
+– 定义格式: set( 值 1, 值 2, 值 N)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
