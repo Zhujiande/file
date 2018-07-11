@@ -1,0 +1,154 @@
+ 
+   MySQL键值（重点）
+
+   foriegn key 外键（难点）
+
+
+一、约束条件
+    Null             key       Default          Extra
+是否允许赋null值         键值         默认值              额外设置
+
+eg:     如果不给age，sex赋值，则默认为 19 boy，空用null表示
+create table t5(
+name char(12) not null,
+age tinyint(2) not null default 19,
+sex enum("boy","girl"), not null default "boy"
+);  
+
+
+二、修改表结构
+
+对已经创建的表的结构做修改：
+	添加新字段： add   (添加的字段默认放在最后，在最后加first则放到最前，也可以用 after 字段，放在指定字段后面)
+            eg: alter table db2.t7 add email  varchar(50) default "student@tedu,cn";    //添加一个email字段，并设置默认值
+                alter table db2.t7 add stu_num char(9) first;              //将stu_num字段放在表的最前面
+                alter table db2.t7 add likes set("game","sleep","film","eat") after email;   //将likes字段放在email后
+	删除已有字段：drop
+            eg: alter table db2.t7 drop email；   //将email字段删除，注意：这一列所有数据都删除了！！
+	修改已有字段类型：modify
+             注意： 修改字段类型时，若新的类型与字段已经存储数据冲突，不允许修改 ，不修改的部分要原样写一遍，否则就是还原！！
+            eg:alter table db2.t7 modify sex enum("boy","girl","no") not null default "boy";    
+               alter table db2.t7 modify sex enum("boy","girl","no");                //null 和default的值会被还原
+               也可用于改变字段的位置
+            eg: alter table db2.t7 modify sex enum("boy","girl","no")not null default "boy" after name    //将sex放在name之后
+	修改字段名 ：change
+            eg: alter table db2.t7 change stu_num stu_id varchar(9);            //将stu_num改为stu_id ，注意：其他原样写下来，否则就是还原！！
+	修改表名： rename
+            eg: alter table db2.t7 rename db2.tt;    //将表名t7改为tt
+
+
+
+三、MySQL键值（重点）  约束如何给字段赋值
+
+	普通索引：index 
+                索引介绍：给字段值排序的树形结构，类似与“书的目录” 索引类型包括 :Btree 、 B+tree 、 hash （排序算法，类似于字典的偏旁，部首，笔画）
+		索引优点：通过创建唯一性索引,可以保证数据库表中每一行数据的唯一性， 可以加快数据的检索速度
+		索引缺点：当对表中的数据进行增加、删除和修改的时候,索引也要动态的维护,降低了数据的维护速度，索引需要占物理空间；减慢写入数据的速度
+
+       使用索引：
+		查看：   desc  表名；   key ---> MUL
+                    show index from 库名.表名\G;
+
+		创建：   把已有表的字段设置为index字段 : create index 索引名 on 表名 ( 字段名 );
+                    eg: create index aaa on db2.t7(name);
+                          建表的时候指定索引字段：index( 字段 1), index( 字段 2) .. ..
+                    eg:  create table t8(
+                              name char(12) not null default "",
+   			           class char(7) default "nsd1804",
+			           age tinyint(2) not null default 18, 
+		                 sex enum("boy","girl","no") default "boy",
+			           index(name),index(class) 
+                                      );
+
+		删除：   drop index 索引名 on 表名 ;
+                    eg： drop index aaa on db2.t7;
+
+       使用说明：
+		一个表中可以有多个 index 字段
+		字段的值允许有重复,且可以赋 NULL 值
+		经常把做查询条件的字段设置为 index 字段
+		INDEX 字段的 Key 标志是 MUL
+
+
+
+	主键： primary key 限制如何给字段赋值
+        
+         使用说明：
+		 一个表中只能有一个 primary key 字段
+		 对应的字段值不允许有重复,且不允许赋 NULL值 
+		 如果有多个字段都作为 primary key ,称为复合主键,必须一起创建。
+		 主键字段的 KEY 标志是 PRI
+		 通常与 AUTO_INCREMENT 连用
+		 经常把表中能够唯一标识记录的字段设置为主键字段 [ 记录编号字段 ]
+         创建主键：
+               建表的时候指定主键字段： primary  key ( 字段名 )
+                            eg1：create table db2.t9(stu_id  char(9) primary key,name char(12),age int(2));
+         			   eg2：create table db2.t9(stu_id  char(9),name char(12),age int(2),primary key(stu_id));
+               
+              在已有的表中设置主键字段： alter table 表名 add primary key ( 字段名 );
+                                            如果有重复值的话，设置失败，需要手动删除重复的
+     
+         删除主键：alter table 表名 drop primary key;         
+ 
+        创建复合主键：表中的多个字段一起做主键，赋值时，只要主键字段的值不同时重复 (一起创建 一起删除)
+              建表的时候设置复合主键：create table t12(name char(12),class char(12),pay enum("yes","no"),primary key(name,class));
+              在已有表中添加复合主键：alter table t12 add primary key(name,class);     //如果有重复值的话，设置失败，需要手动删除重复的      
+        删除复合主键：alter table t12 drop primary key;
+ 
+
+
+            外键
+	  唯一索引
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
