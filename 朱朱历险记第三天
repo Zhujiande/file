@@ -1,0 +1,187 @@
+外键:   foreign key   让当前表字段的值在另一个表中字段值的范围内选择	
+      
+          使用外键的条件:
+		 表的存储引擎必须是 innodb
+		 字段类型要一致
+		 被参照字段必须要是索引类型的一种 (primary key)
+  
+       eg:create table gztab(gz_id int(2),pay float(7,2),foreign key(gz_id) references yginfo(yg_id) on delete cascade on update cascade)engine=innodb;
+                                                            gz_id 做外键           参考  yginfo表的yg_id        同步删除              实时同步更新         储存引擎
+                    
+      删除外键字段:
+            alter table 表名  drop  foreign key 约束名；
+      查看约束名：   show create table 表名；    ----->   CONSTRAINT 后面跟着的就是 "约束名"
+      测试同步删除和同步更新：
+            update yginfo set yg_id=7 where yg_id=2;   //将表yginfo中yg_id为2的值改为7
+            delete from yginfo where yg_id=4;          //将表yginfo中yg_id=4那一列删掉
+
+  
+一、
+    数据导入：把系统文件的内容存储到数据库服务器的表里。有格式规律
+    数据导出：把数据库的表里的记录储存到系统文件里
+
+  导入、导出数据 文件存储路径 默认是/var/lib/mysql-files
+  查看路径： mysql> show variables like "secure_file_priv";
+
+  自定义数据导入，导出数据文件存储路径：
+     mkdir /mydata --->  chown mysql /mydata ---> vim /etc/my.cnf --->  在[mysqld] 下面加 secure_file_priv="/mydata" ---> 重启服务
+
+
+    导入：   把系统文件拷贝到指定的目录下 ---> 创建存储文件内容表 ---> 导入数据（load data infile “ 目录名 / 文件名” into table 表名  fields terminated by “ 分隔符” lines terminated by “\n”;）
+eg：  
+拷贝需要存储的内容：
+	mysql> system cp /etc/passwd /mydata
+	mysql> system ls /mydata
+	mysql> system head -2 /mydata/passwd
+	root:x:0:0:root:/root:/bin/bash
+	bin:x:1:1:bin:/bin:/sbin/nologin
+根据数据结构创建表：
+      create table user(name char(50),passwd char(1),uid int(2),gid int(2),comment char(150),homedir char(150),shell char(50),index(name));
+导入数据：
+	load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+
+加行号便于查找管理：alter table user add id int(2) primary key auto_increment first;
+
+注意事项：
+      字段分隔符要与文件内的一致
+      指定导入文件的绝对路径
+      导入数据的表字段类型要与文件字段匹配
+      禁用 SElinux
+
+
+    导出： 
+   select 查询 .. .. into outfile “ 目录名 / 文件名” fields terminated by “ 分隔符” lines terminated by “\n”;   (默认行用tab间隔，列用\n 就是换行)
+eg：
+	select * from t1 into outfile "/mydata/t1.txt";
+	select * from t1 into outfile "/mydata/t2.txt" fields terminated by "666";     //用666来分隔行
+	select * from t1 into outfile "/mydata/t3.txt" fields terminated by "666" lines terminated by "999";   //用999来分隔列
+
+注意事项
+     导出的内容由 SQL 查询语句决定 （查询一行内容则仅仅导出该行）
+     禁用 SElinux
+
+
+二、
+     管理表记录：
+		添加新记录： insert into
+		查询记录： select
+		更新记录字段的值： update
+		删除记录： delete
+
+ 匹配条件的表达方式（select update delete）
+
+
+添加新纪录： 
+    给所有字段赋值：	insert into user values(42,"zhu","x",13,13,"nb","/home/zhu","/bin/bash");
+    给指定字段赋值：   insert into user(name,shell,uid)values("jian","/sbin/nologin",13);
+
+  注意事项：
+	字段值要与字段类型相匹配
+	对于字符类型的字段,要用双或单引号括起来
+	依次给所有字段赋值时,字段名可以省略
+	只给一部分字段赋值时,必须明确写出对应的字段名称
+
+
+查询记录：  select 字段名列表 from 表 where 条件；   
+ select * from user;     
+ select name,uid,shell where id=1;   
+ select name,uid,shell from user where shell="/bin/bash";
+
+  注意事项：
+	使用 * 可匹配所有字段
+	指定表名时,可采用 库名 . 表名 的形式
+ 
+
+更新记录字段的值： update 表 set 字段名=值，字段名=值，... where 条件；
+  更新表内所有记录：update user set passwd="a",gid=123;
+  更新表内复合条件的记录：update user set passwd="A" where id=1;
+
+  注意事项：
+	字段值要与字段类型相匹配
+	对于字符类型的字段,要用双或单引号括起来
+	若不使用 WHERE 限定条件,会更新所有记录
+	限定条件时,只更新匹配条件的记录
+
+
+删除记录： delete from 表 where 条件；
+  删除表内所有记录： delete from user;
+  仅删除符合条件的记录行：delete from user where id=42;  delete from user where name="lp";   
+
+
+
+三、对记录做select update delete时可以使用的条件的表达方式：
+   
+数值比较：   >   >=   <   <=   =   !=
+   where 字段名  符号  数值
+eg:   select * from user where id <=10;
+	select name,uid,gid from user where uid <= 10;
+	select name,homedir,shell from user where id >= uid;
+   
+字符比较：  =  !=   
+    where 字段名 符号  “值”   
+eg:   
+	select * from user where name="root";
+	select * from user where shell != "/bin/bash";
+	select name,uid,homedir from user where shell="/bin/bash";
+
+匹配空： is null 
+匹配非空： is not null
+eg:
+	insert into user(id,name)values(51,""),(52,"null"),(53,null);
+	select id,name from user where name is null;    //只出现添加的第三个
+	select id,name from user where name is not null and id>=51;  //出现添加的前两个
+
+	update user set passwd=null where name="bin";   //将名字为bin的密码改为空
+
+
+逻辑比较： and(与)  or(或)  ! not(非)    ( )提高优先级
+   select * from user where name="root" and shell="/bin/bash";
+   select * from user where name="root"  or uid=1;
+
+   select name,id,uid from user where name='root' or name='bin' and uid=1;      //默认优先处理and(与)
+   select name,id,uid from user where (name='root' or name='bin') and uid=1;    //括号用来提高优先级，即先执行括号内的
+
+
+范围内匹配：
+In ( 值列表 )             在...里...
+Not in ( 值列表 )         不在...里...
+eg:
+   select name,uid from user where uid in (1,2,4,12);
+   select name from user where name in ("as","lp","de","root");
+   select name,uid from user where shell not in ("/bin/bash","/sbin/nologin");
+
+Between 数字 1 and 数字2    在...之间...(包括1和2)
+eg:
+   select id,name,homedir from user where id between 15 and 19;  =  select id,name,homedir from user where id>=15 and id<=19;
+   
+distinct 字段名      去重显示   
+eg:
+    select distinct shell from user;
+    select distinct shell,uid from user where id>=40;
+    select shell,uid from user where id>=40;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+load data infile "var/lib/mysql-files" into table user fields terminated by ":" lines terminatred by "\n";
+load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+load data infile "/mydata/passwd" into table user fields termianted by ":" lines terminated by "\n"; 
+load data indile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+load data infile "/mydata/passwd" into table user fields terminated by ":" lines terminated by "\n";
+
+
+
