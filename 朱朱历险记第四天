@@ -1,0 +1,390 @@
+limit是mysql的语法
+select * from table limit m,n
+其中m是指记录开始的index，从0开始，表示第一条记录
+n是指从第m+1条开始，取n条。
+select * from tablename limit 2,4
+即取出第3条至第6条，4条记录
+
+
+select name haha from suertab;
+select name as haha from usertab;    //相当于给name取一个别名haha
+
+
+
+
+高级查询条件：
+
+
+模糊匹配：– where 字段名 like ' 通配字串 '    通配符   _ 匹配单个字符    % 匹配 0~N 个字符（不匹配空值，因为null连0都不算）
+eg：  
+mysql> select name from user where name like '_ _ _';        //匹配最少有三个字符的
+mysql> select name  from  user where name like '%a%';        //匹配含有一个字符a及以上的名字
+mysql> select name from user where name like '%_ _ _ _%';    //匹配最少4个字符
+mysql> select id,name from user where name like '%';         //不能匹配空值 null
+
+
+正则匹配：where  字段名 regexp ‘正则表达式’;      ^ $ . [ ] *  |
+eg：
+mysql> select name from user where name regexp '^a.*t$';              //匹配a开头t结尾的名字
+mysql> select name from user where name regexp '[0-9]';               //匹配有数字的名字
+mysql> select  name,uid  from  user where uid regexp '....';          //匹配uid最少有4个字符
+mysql> select  name,uid  from  user where uid regexp '^....$';        //匹配有4个字符的uid
+
+
+四则运算：    +   -  *  /  %   字段类型 必须是数值类型
+eg：
+mysql> update user set uid=uid+1 where id<=10;       
+mysql> select name,age,2018-age s_year from user where name='adm';
+mysql> select name,uid,gid,uid+gid sum from user where name='root';
+
+
+聚集函数：
+MySQL 内置数据统计函数：
+	 avg( 字段名 ) : 求平均值
+	 sum( 字段名 ) : 求和
+	 min( 字段名 ) : 统计最小值
+	 max( 字段名 ) : 统计最大值
+       count( 字段名 ) : 统计个数    （对字段值统计时不算空值）   
+eg: select max(uid) from usertab where id<=10;
+    select avg(uid) from usertab where id<=10;
+    select count(*) from usertab;
+    select count(id),count(name) from usertab;    //两个值不相等，因为名字有一个空值，无法匹配
+
+
+
+
+操作查询结果：
+ 
+
+查询结果分组：  sql查询  group  by  字段名；
+eg：
+select shell from usertab group by shell; =  select distinct shell from usertab;   //查询shell的种类
+
+
+查询结果排序：  sql查询  order  by  字段名 [ asc|desc ]；     (默认为asc升序排列，desc为降序排列)
+eg：
+select id,name,uid from usertab where uid between 10 and 500 order by uid;
+select id,name,uid from usertab where uid between 10 and 500 order by uid desc;
+限制查询结果显示的行数：    sql查询 limit 数字；             //显示查询结果的前几行
+                       sql查询 limit 数字1，数字2；     //显示指定范围的行   数字1表示从第几行开始，不包括自己    数字2表示共显示几行
+eg：
+select name,shell from usertab limit 5;    //取出查询结果的前五行
+select * from tablename limit 2,4         //取出第3条至第6条，4条记录
+
+查询结果里过滤数据： sql查询  having  条件；
+eg：     
+select name,uid from usertab where uid>=1000 having name is null;
+select name.uid from usertab where uid>=1000 having uid=63553;
+select name,uid from usertab where uid>=1000 having name='bob';  
+  =  select name,uid from usertab where uid>=1000 and name='bob'  //查询结果一样，但是过程大大不同，前者查询速度快的多
+
+
+
+多表查询：
+
+
+1、复制表（作用：备份表、快速建表）  （键值不会被复制）
+     create table 表名  sql查询
+eg:
+备份： 
+    create table usertab1 select * from usertab;    //把usertab表备份改名为usertab1
+    create table usertab2 select name,uid,shell from usertab order by uid desc;    //将usertab表查询的结果备份到usertab2
+快速建表：create table vvvv select * from xxxx where false;
+     create table usertab3 select * from usertab where 1=2;    //备份时查询一个不存在的条件，可快速建一个相同结构的表
+
+
+2、多表查询 (又称 连接查询)
+	将 2 个或 2 个以上的表 按某个条件连接起来,从中选取需要的数据
+	当多个表中 存在相同意义的字段(字段名可以不同）时,可以通过该字段连接多个表
+格式：  select 字段名列表 from 表 a, 表 b where 条件;
+eg:   select * from t1,t2;
+	select t1.*,t2.passwd,t2.homedir from t1,t2;
+	select t1.*,t2.passwd,t2.homedir from t1,t2 where t1.uid=t2.uid;
+	select t1.*,t2.* from t1,t2 where t1.uid=t2.uid;
+ 以上格式的查询结果叫笛卡尔集 显示查询结果的总条目数是 (表 a 的纪录数 * 表 b 的纪录数)
+
+
+3、嵌套查询：   把内层查询结果作为外层查询的查询条件
+     select 字段名列表 from 表名  where 条件 （select 字段名列表 from 表名）
+eg：  select name from usertab where uid=(select max(uid) from usertab);
+      select name,uid from usertab where uid < (select avg(uid) from usertab);
+      select name from usertab where name in (select name from t1);
+
+
+
+4、
+   左连接查询：  以左边表为主显示查询结果
+     select 字段名列表 from 表a left join  表b  on  条件表达式;
+ 
+   右连接查询： 以右边表为主显示查询结果
+     select 字段名列表 from 表a right join 表b  on  条件表达式;
+
+eg:     (t3总共五行,t4总共七行)
+mysql> select * from t3 left join t4 on t3.uid=t4.uid;
+
++----------+----------+---------------------------+----------+----------+--------------------------+
+| name | uid  | shell         | name | uid  | shell         |
++----------+----------+---------------------------+----------+----------+---------------------------+
+| root |    1 | /sbin/nologin | root |    1 | /sbin/nologin |
+| bin  |    2 | /sbin/nologin | bin  |    2 | /sbin/nologin |
+| adm  |    4 | /sbin/nologin | adm  |    4 | /sbin/nologin |
+| lp   |    5 | /sbin/nologin | lp   |    5 | /sbin/nologin |
+| sync |    6 | /sbin/nologin | sync |    6 | /sbin/nologin |
++----------+----------+---------------------------+----------+----------+---------------------------+
+5 rows in set (0.00 sec)
+
+mysql> select * from t3 right join t4 on t3.uid=t4.uid;
+
++----------+----------+---------------------------+-----------------+----------+----------------------------+
+| name | uid  | shell         | name     | uid  | shell          |
++----------+----------+---------------------------+-----------------+----------+----------------------------+
+| root |    1 | /sbin/nologin | root     |    1 | /sbin/nologin  |
+| bin  |    2 | /sbin/nologin | bin      |    2 | /sbin/nologin  |
+| adm  |    4 | /sbin/nologin | adm      |    4 | /sbin/nologin  |
+| lp   |    5 | /sbin/nologin | lp       |    5 | /sbin/nologin  |
+| sync |    6 | /sbin/nologin | sync     |    6 | /sbin/nologin  |
+| NULL | NULL | NULL          | shutdown |    7 | /sbin/shutdown |
+| NULL | NULL | NULL          | halt     |    8 | /sbin/halt     |
++----------+----------+---------------------------+-----------------+----------+-----------------------------+
+7 rows in set (0.01 sec)
+
+
+
+MySQL图形工具：
+
+
+1、部署运行环境lamp 或者 lnmp：
+   装包 httpd、php、php-mysql ---> 重起httpd服务 
+2、安装软件：
+   解包 tar -xzvf phpMyAdmin-2.11.11-all-languages.tar.gz ---> 移动到 /var/www/html/phpadmin
+3、创建配置文件，指定管理数据库服务器
+  创建配置文件 cp config.sample.inc.php  config.inc.php ---> vim 修改 17行，31行
+4、客户端访问
+  打开浏览器输入URL网址  ---> 登陆
+
+
+
+
+设置数据库管理员root的密码（操作系统管理员有权修改）：
+
+]# mysqladmin -hlocalhost -uroot -p password "新密码";
+Enter password:输入当前密码
+
+恢复数据库管理员root密码：
+ 停服务 systemctl stop mysqld --->  修改配置文件/etc/my.cnf ：在[ mysql ]下面加 skip_grant_tables (跳过授权)
+ ----> 启动服务 start --->  mysql直接进入后执行：  update mysql.user set authentication_string=password("123456") where user='root' and host='localhost';
+ ----> 刷新授权 flush privileges ---> 退出后停止服务，把配置文件新加的 skip_grant_tables删掉 ---> 启动服务 ----> 验证：mysql不能直接进入，用mysql -uroot -p123456 可以进入
+
+
+用户授权：（在数据库服务器上添加，连接时使用的用户名,默认只有数据库管理员root用户在数据库服务器本机登陆有授权权限。默认情况下管理员只能从数据库本机连接服务，在没有其他用户能够连接数据库服务器了。）
+
+基本用法:
+mysql> grant 权限列表 .. .. on 数据库名 to 用户名 @' 客户端地址 '  identified by ' 密码 ' [ with grant option ];                                          
+
+备注：
+with grant option （可选），让添加的用户连接服务器后，也有授权权限
+identified by '密码' ，新添加的用户连接数据库服务器时，使用的密码  
+客户端地址  作用：网络中的哪些主机可以使用新添加的用户连接数据库服务器。有如下表示方式：
+   所有主机 ：  % 
+   本机： localhost
+   网段： eg：192.168.4.%
+   指定主机：eg：192.168.4.51
+   主机名：eg：pc1.tedu.cn
+   域名：%.tedu.cn
+用户名：客户端主机连接数据库服务器时使用的名字，授权自定义即可名字要有标识性
+数据库名：新添加的连接用户，访问后可以操作的库，表示方式如下：
+   所有库,所有表    *.*
+   库下的所有表     库名.*
+   某张表           库名.表名
+权限列表：新添加的连接用户，对可以操作的库的访问权限，权限的表示方法如下：
+   所有权限：all
+   某种权限：eg：insert delete select 
+
+授权库 mysql 库记录授权信息，使用不同的表记录不同的授权信息:
+   user:记录已经添加的连接用户名
+   db：记录已添加的连接用户对库的访问权限
+   tables_priv：记录已添加的连接用户对表的访问权限
+   columns_priv：记录已添加的连接用户对表字段的访问权限
+
+查看授权用户的访问权限：
+查看自己的权限：show grants;
+
+查看其他用户的权限：show grants for 用户@'客户端主机'；    查看授权用户的访问权限
+
+
+  授权---->验证
+
+select @@hostname;      查看验证是否是所连接的数据库服务器
+select user();          查看连接的用户信息
+show grants;            查看自己所拥有的权限
+
+
+
+权限撤销：（删除新添加用户的访问权限）
+
+mysql>  revoke  权限  on  数据库名   from   用户名@“客户端地址”；
+
+法1：
+ select user,host from user;   
+-->show grants for root@"192.168.4.52";  
+-->revoke grant option on *.* from root@"192.168.4.52";
+
+法2： 修改记录方式，撤销用户权限
+select * from user where user="root" and host="192.168.4.52"\G
+---->update mysql.user set delete_priv="N" where user="root" and host="192.168.4.52";
+----> flush privileges
+
+怎么授权的就怎么撤销，不能说给all，然后撤销insert某个表，否则会报错：
+	grant all on *.* to root@"192.168.4.52" identified by '123qqq...A';
+	revoke insert on db3.* from root@"192.168.4.52";
+There is no such grant defined for user 'root' on host '192.168.4.52'
+
+
+删除授权用户：
+mysql> drop user 用户名@“客户端地址”；
+eg：
+ mysql> drop user root@"192.168.4.52";   ---> 验证
+
+
+注意：撤销所有权限后可以连接，在user表里也可以看到，但没有任何权限，删除授权用户后，就不能连接了。
+
+
+修改连接用户的密码：
+
+授权用户连接数据库服务器后修改连接密码：
+mysql> set password=password("新密码")
+
+管理员重置授权用户的连接密码：
+mysql> set password for 用户名@"客户端地址"=password("新密码")
+
+ 
+
+
+mysql储引擎：
+
+MySQL 服务软件自带的功能程序,处理表的处理器
+不同的存储引擎有不同的功能和数据存储方式
+
+查看当前的数据库服务，支持的存储引擎：  show engines；
+
+修改数据库服服务默认使用的储存引擎：
+ 停服务---> 修改配置文件/etc/my.cnf-->在 [ mysqld ]下面加 default-storage-engine=myisam
+ ----> 保存退出，重启服务
+
+建表时指定表使用的储存引擎：
+create table 表名（）engine=引擎名；
+
+查看表使用的存储引擎：
+show create table 表名；
+
+
+工作中建表时，如何决定表使用的存储引擎？
+
+常用存储引擎的特点：
+
+InnoDB的特点:
+1、支持行级锁（客户端连接数据库服务器后，对表的数据做访问时，若表的存储引擎是myisam的话，会只给表中被访问的行加锁）
+2、支持外键、事务和事务回滚（事务Transaction）
+3、每个表对应两个表文件：
+表.frm：表结构数据
+表.ibd：表数据和index索引
+
+myisam的特点：
+1、支持表级锁（客户端连接数据库服务器后，对表的数据做访问时，若表的存储引擎是myisam的话，会给整张表加锁）
+2、不支持事务和事务回滚
+3、每个表对应三个表文件： 
+表.frm： 表结构数据   desc 表
+表.MYD： 表数据
+表.MYI： 表的index索引信息
+
+
+
+事务（Transactions）： 一次sql操作从建立连接到操作完成断开连接的访问过程称作事务。
+
+支持事务的可以做事务回滚：在事务执行过程中，一次sql操作中有任意一步没有执行成功会恢复所有操作。（即对innodb存储引擎的表访问时，必须任意一步都成功，才能完成操作）
+使用的事务操作是：银行的汇款或转账业务
+
+innodb存储引擎的表有对应的事务文件记录所有SQL命令:
+/var/lib/mysql/
+ibdata1
+ib_logfile0
+ib_logfile1
+
+
+事务的特点（ACID）：
+
+• Atomic :原子性
+– 事务的整个操作是一个整体,不可分割,要么全部成功,要么全部失败。
+• Consistency : 一致性
+– 事务操作的前后,表中的记录没有变化。
+• Isolation :隔离性
+– 事务操作是相互隔离不受影响的。
+• Durability :持久性
+– 数据一旦提交,不可改变,永久改变表数据
+
+
+
+锁粒度
+– 表级锁 : 一次直接对整张表进行加锁。
+– 行级锁 : 只锁定某一行。
+– 页级锁 : 对整个页面( MySQL 管理数据的基本存储单位)进行加锁。
+
+锁类型
+– 读锁(共享锁) : 支持并发读。（当对一张表执行查询 (select) 操作的时候，会加读锁）
+– 写锁(互斥锁、排它锁): 是独占锁,上锁期间其他写线程不能读表或写表。(当对一张表执行（insert,update,delete）操作时，会加写锁）
+
+！！执行写操作多的表适合使用innodb存储引擎，这样并发访问量大（行级锁）
+！！执行查询操作多的表适合使用myisam存储引擎，节省系统资源（表级锁）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
