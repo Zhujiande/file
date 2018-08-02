@@ -1,0 +1,73 @@
+db. 集合名 .find ( { 条件 },{ 定义显示的字段 } )
+
+– $in 在...里
+– $nin 不在...里
+– $or 或
+– > db.user.find({uid:{$in:[1,6,9]}})
+– > db.user.find({uid:{$nin:[1,6,9]}})
+– > db.user.find({$or: [{name:"root"},{uid:1} ]})
+
+
+正则匹配
+– > db.user.find({name: /^a/ })
+• 数值比较
+– $lt $lte $gt $gte $ne
+< <= > >= !=
+– db.user.find( { uid: { $gte:10,$lte:40} } , {_id:0,name
+:1,uid:1})
+
+匹配 null , 也可以匹配没有的字段
+– > db.user.save({name:null,uid:null})
+– > db.user.find({name:null})
+
+
+> db. 集合名 .update({ 条件 },{ 修改的字段 } )
+注意:把文件的其他字段都删除了,只留下了 password 字段
+, 且只修改与条件匹配的第 1 行 !!!
+
+
+
+$set / $unset
+• $set 条件匹配时,修改指定字段的值
+– db.user.update({ 条件 },$set: { 修改的字段 })
+– db.user3.update({name:"bin"},{$set:{password:"A"}}
+
+• $unset 删除与条件匹配文档的字段
+– db. 集合名 .update({ 条件 },{$unset:{key:values}})
+– db.user3.update({name:"bin"},{$unset:{password:"A"}})
+
+
+语法格式:默认只更新与条件匹配的第 1 行
+– > db.user.update({ 条件 },{$set:{ 修改的字段 }} ,false,true )
+– > db.user.update({name:“bin”},{$set:{password:“abc12123”}} ,false,true)
+
+
+
+$inc
+• $inc 条件匹配时,字段值自加或自减
+– Db. 集合名 .update({ 条件 },{$inc:{ 字段名 : 数字 }})
+正整数自加 负整数自减!!!!
+– db.user.update({name:"bin"},{$inc:{uid:2}}) 字段值自加 2
+– db.user.update({name:“bin”},{$inc:{uid:-1}}) 字段自减 1
+
+$push / $addToSet
+• $push 向数组中添加新元素
+– db. 集合名 .update({ 条件 },{$push:{ 数组名 :“ 值” }})
+– db.user.insert({name:"bob",likes:["a","b","c","d","e","f"]})
+– db.user.update({name:“bob”},{$push:{likes:“w"}})
+• $addToSet 避免重复添加
+– db. 集合名 .update({ 条件 },{$addToSet:{ 数组名 :”值” }}) db.user.update({name:"bob"},{$addToSet:{likes:“f"}})
+
+$pop /$pull
+• $pop 从数组头部删除一个元素
+– db. 集合名 .update({ 条件 },{$pop:{ 数组名 : 数字 }})
+– db.user.update({name:"bob"},{$pop:{likes:1}})
+– db.user.update({name:"bob"},{$pop:{likes:-1}})
+1 删除数组尾部元素 -1 删除数组头部元素
+• $pull 删除数组指定元素
+– db. 集合名 .update({ 条件 },{$pull:{ 数组名 : 值 }})
+– db.user.update({name:"bob"},{$pull:{likes:"b"}})
+
+
+
+
