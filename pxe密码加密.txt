@@ -1,0 +1,3 @@
+des算法
+
+perl -e 'print crypt ("123456","/g"),"\n"'
