@@ -1,0 +1,358 @@
+拓扑结构
+
+            master51
+	        |
+		|
+______________________________________________________
+  |		|         |         |		|
+ slave52    slave53   slave54     slave55      mgm56
+                                              Manager
+
+
+公共配置：
+在所有主机上安装软件软件包
+[root@db108 share]# ls  perl-*.rpm
+perl-Config-Tiny-2.14-7.el7.noarch.rpm          
+perl-Mail-Sender-0.8.23-1.el7.noarch.rpm       
+perl-MIME-Types-1.38-2.el7.noarch.rpm
+perl-Email-Date-Format-1.002-15.el7.noarch.rpm  
+perl-Mail-Sendmail-0.79-21.el7.art.noarch.rpm  
+perl-Parallel-ForkManager-1.18-2.el7.noarch.rpm
+perl-Log-Dispatch-2.41-1.el7.1.noarch.rpm       
+perl-MIME-Lite-3.030-1.el7.noarch.rpm
+
+[root@db108 share]# yum -y  install  perl-*.rpm
+
+
+一、配置所有数据节点主机之间可以互相以ssh密钥对方式认证登陆
+二、配置manager56主机 无密码ssh登录 所有数据节点主机
+
+三、配置主从同步,要求如下：
+51 主库		     开半同步复制
+52 从库（备用主库）  开半同步复制
+53 从库（备用主库）  开半同步复制
+54 从库 不做备用主库所以不用开半同步复制 
+55 从库 不做备用主库所以不用开半同步复制
+
+
+3.1、master51配置：
+vim  /etc/my.cnf
+[mysqld]
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled = 1
+rpl-semi-sync-slave-enabled = 1
+
+server_id=51
+log-bin=master51
+binlog-format="mixed"
+:wq
+
+[root@db107 ~]# systemctl  restart mysqld
+
+[root@db107 ~]# ls /var/lib/mysql/master51.*
+/var/lib/mysql/master51.000001  /var/lib/mysql/master51.index
+
+[root@db107 ~]# mysql -uroot -p123456
+mysql> grant  replication slave  on  *.*  to repluser@"%"  identified by "123456";
+Query OK, 0 rows affected, 1 warning (10.04 sec)
+
+mysql> set global relay_log_purge=off;
+Query OK, 0 rows affected (0.15 sec)
+
+mysql> show master status;
++-----------------+----------+--------------+------------------+-------------------+
+| File            | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------------+----------+--------------+------------------+-------------------+
+| master51.000001 |      441 |              |                  |                   |
++-----------------+----------+--------------+------------------+-------------------+
+mysql> quit;
+
+
+3.2、备用master52的配置
+vim /etc/my.cnf
+[mysqld]
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled = 1
+rpl-semi-sync-slave-enabled = 1
+
+server_id=52
+log-bin=master52
+binlog-format="mixed"
+
+]# systemctl restart mysqld
+[root@db108 ~]# ls /var/lib/mysql/master52.*
+/var/lib/mysql/master52.000001  /var/lib/mysql/master52.index
+
+[root@db108 ~]# mysql  -uroot  -p123456
+
+mysql> set global relay_log_purge=off; 
+Query OK, 0 rows affected (0.13 sec)
+
+mysql> change master to 
+    -> master_host="192.168.4.51",
+    -> master_user="repluser",
+    -> master_password="123456",
+    -> master_log_file="master51.000001",
+    -> master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.04 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.01 sec)
+
+
+[root@db108 ~]# mysql -uroot -p123456 -e "show slave status\G"  | grep -i YES
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@db108 ~]# 
+
+
+3.3、备用master53的配置
+]#  vim /etc/my.cnf
+[mysqld]
+plugin-load = "rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled = 1
+rpl-semi-sync-slave-enabled = 1
+
+server_id=53
+log-bin=master53
+binlog-format="mixed"
+:wq
+
+[root@db109 ~]# systemctl  restart mysqld
+[root@db109 ~]# ls /var/lib/mysql/master53.*
+/var/lib/mysql/master53.000001  /var/lib/mysql/master53.index
+[root@db109 ~]# 
+
+[root@db109 ~]# mysql -uroot -p123456
+mysql> set global relay_log_purge=off;
+Query OK, 0 rows affected (0.14 sec)
+
+mysql> change master  to master_host="192.168.4.51",master_user="repluser",master_password="123456",master_log_file="master51.000001",master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.05 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+
+[root@db109 ~]# mysql -uroot -p123456 -e "show slave status\G" | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+             Slave_SQL_Running: Yes
+[root@db109 ~]# 
+
+
+3.4、配置从服务器54
+[root@db111 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=54
+:wq
+
+[root@db111 ~]# systemctl  restart mysqld
+[root@db111 ~]# mysql -uroot -p123456
+mysql> change master  to master_host="192.168.4.51",master_user="repluser",master_password="123456",master_log_file="master51.000001",master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.09 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> quit;
+Bye
+[root@db111 ~]# 
+[root@db111 ~]# mysql -uroot -p123456 -e "show slave status\G" | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@db111 ~]# 
+
+
+3.5、配置从服务器55
+[root@db111 ~]# vim /etc/my.cnf
+[mysqld]
+server_id=55
+:wq
+
+[root@db111 ~]# systemctl  restart mysqld
+[root@db111 ~]# mysql -uroot -p123456
+mysql> change master  to master_host="192.168.4.51",master_user="repluser",master_password="123456",master_log_file="master51.000001",master_log_pos=441;
+Query OK, 0 rows affected, 2 warnings (0.09 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> quit;
+Bye
+[root@db111 ~]# 
+[root@db111 ~]# mysql -uroot -p123456 -e "show slave status\G" | grep -i yes
+mysql: [Warning] Using a password on the command line interface can be insecure.
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+[root@db111 ~]# 
+
+
+3.6、在客户端测试主从同步配置
+
+
+
+
+
+3.2.1  配置集群
+3.2.1.1  配置数据库服务器（51-55）
+安装mha_node软件
+]#yum -y  install perl-DBD-mysql
+]#rpm -ivh mha4mysql-node-0.56-0.el6.noarch.rpm 
++++++++++++++++++++++++++++
+3.2.1.2  配置管理服务器（56）
+安装mha_node 和 mha_manager软件
+]# yum -y  install perl-DBD-mysql
+]# rpm -ivh mha4mysql-node-0.56-0.el6.noarch.rpm 
+]#yum -y install perl-ExtUtils-*    perl-CPAN-*
+]#tar -zxvf mha4mysql-manager-0.56.tar.gz
+]#cd mha4mysql-manager-0.56
+]#perl Makefile.PL 
+]#make
+]#make install
+
+把命令拷贝的$PATH路径下
+[root@host56 mha4mysql-manager-0.56]# cp -r bin /root/
+[root@host56 mha4mysql-manager-0.56]# ls /root/bin/
+
+编写管理主机服务的主配置文件 
+mkdir  /etc/mha_manager
+休息到 11:10
+
+cd  mha4mysql-manager-0.56/samples
+cp conf/app1.cnf /etc/mha_manager/
+vim /etc/mha_manager/app1.cnf
+
+
+
+根据配置文件的定义做相应的设置
+]#cd  mha-soft-student
+]# cp master_ip_failover /etc/mha_manager/
+
+编辑脚本
+]# chmod +x /etc/mha_manager/master_ip_failover
+vim /etc/mha_manager/master_ip_failover
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig eth0:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig eth0:$key down";
+
+授权监控用户(51-55)
+mysql>
+grant all  on *.* to   root@'%'  identified  by   "123qqq...A";
+select  user,host from  mysql.user  where  user="root";
+
+56]# mysql  -h192.168.4.51  -uroot  -p123qqq...A
+
+3.2.1  配置集群
+3.2.1.1  配置数据库服务器（51-55）
+安装mha_node软件
+]#yum -y  install perl-DBD-mysql
+]#rpm -ivh mha4mysql-node-0.56-0.el6.noarch.rpm 
++++++++++++++++++++++++++++
+3.2.1.2  配置管理服务器（56）
+安装mha_node 和 mha_manager软件
+]# yum -y  install perl-DBD-mysql
+]# rpm -ivh mha4mysql-node-0.56-0.el6.noarch.rpm 
+]#yum -y install perl-ExtUtils-*    perl-CPAN-*
+]#tar -zxvf mha4mysql-manager-0.56.tar.gz
+]#cd mha4mysql-manager-0.56
+]#perl Makefile.PL 
+]#make
+]#make install
+
+把命令拷贝的$PATH路径下
+[root@host56 mha4mysql-manager-0.56]# cp -r bin /root/
+[root@host56 mha4mysql-manager-0.56]# ls /root/bin/
+
+编写管理主机服务的主配置文件 
+mkdir  /etc/mha_manager
+休息到 11:10
+
+cd  mha4mysql-manager-0.56/samples
+cp conf/app1.cnf /etc/mha_manager/
+vim /etc/mha_manager/app1.cnf
+
+
+
+根据配置文件的定义做相应的设置
+]#cd  mha-soft-student
+]# cp master_ip_failover /etc/mha_manager/
+
+编辑脚本
+]# chmod +x /etc/mha_manager/master_ip_failover
+vim /etc/mha_manager/master_ip_failover
+my $vip = '192.168.4.100/24';  # Virtual IP 
+my $key = "1";
+my $ssh_start_vip = "/sbin/ifconfig eth0:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig eth0:$key down";
+
+授权监控用户(51-55)
+mysql>
+grant all  on *.* to   root@'%'  identified  by   "123qqq...A";
+select  user,host from  mysql.user  where  user="root";
+
+56]# mysql  -h192.168.4.51  -uroot  -p123qqq...A
+
+
+####################################################################################
+
+配置文件app1.cnf :
+
+[server default]
+manager_log=/etc/mha_manager/manager.log
+manager_workdir=/etc/mha_manager
+master_ip_failover_script=/etc/mha_manager/master_ip_failover
+password=123qqq...A
+repl_password=123qqq...A
+repl_user=repluser
+ssh_port=22
+ssh_user=root
+user=root
+
+[server1]
+candidate_master=1
+hostname=192.168.4.1
+
+[server2]
+candidate_master=1
+hostname=192.168.4.2
+
+[server3]
+candidate_master=1
+hostname=192.168.4.3
+
+[server4]
+hostname=192.168.4.4
+no_master=1
+
+[server5]
+hostname=192.168.4.5
+no_master=1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

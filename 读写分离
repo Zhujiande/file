@@ -1,0 +1,151 @@
+一、数据读写分离
+1.1 什么是数据读写分离？把客户端访问数据时的查询请求和写请求分别给不同的数据库服务器处理。
+
+1.2 为要对数据做读写分离？
+减轻单台数据库服务器的并发访问压力
+提高数据库服务器硬件利用率
+
+1.3 实现数据读写分离的方式？
+人肉分离：  做不同的数据操作时，访问指定的数据库服务器
+使用mysql中间件提供的服务实现：mycat   mysql-proxy   maxscale
+
+1.4 使用中间件提供的服务做数据读写分离的缺点？
+单点故障
+当访问量大时，会成为网络瓶颈
+
+二、配置数据读写分离
+2.1  拓扑结构			        webuser    123456
+	client254   mysql  -h192.168.4.56  -u用户名    -p密码
+	      |
+             代理服务器56
+                       |
+__________________________________
+        write		   read
+            |                           |
+        master                 slave
+          51	                      52
+
+2.2 配置数据读写分离
+2.2.1  配置一主一从  主从同步结构，并在客户端测试配置
+master51> grant  all  on  webdb.*  to webuser@"%"  identified by " 123456";
+
+2.2.2  配置数据读写分离服务器
+2.2.2.1环境准备
+setenforce  0
+systemctl  stop  firewalld
+yum repolist
+ping  -c  2  192.168.4.51
+ping  -c  2  192.168.4.52
+下载软件包 maxscale-2.1.2-1.rhel.7.x86_64.rpm
+
+2.2.2.2 配置数据读写分离服务器56
+1 装包
+
+2 修改配置文件
+vim  /etc/maxscale.cnf
+  9 [maxscale]  //服务运行后开启线程的数量
+ 10 threads=auto
+
+#定义数据库服务器
+ 18 [名称]    
+ 19 type=server
+ 20 address=数据库服务器的ip地址
+ 21 port=3306
+ 22 protocol=MySQLBackend
+
+#定义监控的数据库服务器
+ 36 [MySQL Monitor]
+ 37 type=monitor
+ 38 module=mysqlmon
+ 39 servers=数据库服务器列表
+ 40 user=监视数据库服务器时连接的用户名
+ 41 passwd=密码
+ 42 monitor_interval=10000
+
+#不定义只读服务
+ 53 #[Read-Only Service]
+ 54 #type=service
+ 55 #router=readconnroute
+ 56 #servers=server1
+ 57 #user=myuser
+ 58 #passwd=mypwd
+ 59 #router_options=slave
+
+#定义读写分离服务
+ 64 [Read-Write Service]
+ 65 type=service
+ 66 router=readwritesplit
+ 67 servers=数据库服务器列表
+ 68 user=用户名 #验证连接代理服务访问数据库服务器的用户是否存在
+ 69 passwd=密码
+ 70 max_slave_connections=100%
+
+#定义管理服务
+ 76 [MaxAdmin Service]
+ 77 type=service
+ 78 router=cli
+
+#不指定只读服务使用的端口号
+ 86 #[Read-Only Listener]
+ 87 #type=listener
+ 88 #service=Read-Only Service
+ 89 #protocol=MySQLClient
+ 90 #port=4008
+
+#定义读写分离服务使用的端口号
+ 92 [Read-Write Listener]
+ 93 type=listener
+ 94 service=Read-Write Service
+ 95 protocol=MySQLClient
+ 96 port=4006  #设置使用的端口
+
+#定义管理服务使用的端口
+ 98 [MaxAdmin Listener]
+ 99 type=listener
+100 service=MaxAdmin Service
+101 protocol=maxscaled
+102 socket=default
+       port=4018    #不设置使用的默认端口
+
+
+3 根据配置文件的设置，在2台数据库服务器上添加授权用户
+mysql>grant replication slave, replication client on *.* to scalemon@'%'  identified by  '123qqq...A'; 
+
+mysql> grant select on mysql.* to maxscale@"%" identified by  '123qqq...A';
+
+mysql> select  user from mysql.user  where  user  in ("scalemon","maxscale"); 
+
+4 启动服务
+]# maxscale  -f /etc/maxscale.cnf
+
+]# pkill  -9 maxscale   //停止服务
+
+5 查看服务进程和端口
+[root@host56 ~]# ps -C maxscale
+  PID TTY          TIME CMD
+25957 ?        00:00:00 maxscale
+
+[root@host56 ~]# netstat -utnlp | grep -i  maxscale
+tcp6       0      0 :::4016                 :::*                    LISTEN      25957/maxscale
+      
+tcp6       0      0 :::4006                 :::*                    LISTEN      25957/maxscale      
+
+
+
+4 测试读写分离服务器的配置
+4.1 在56本机访问管理服务，查看监控信息
+[root@host56 ~]# maxadmin  -uadmin  -pmariadb  -P4016
+MaxScale>list  servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           0 | Master, Running
+server2            | 192.168.4.52    |  3306 |           0 | Slave, Running
+-------------------+-----------------+-------+-------------+--------------------
+
+
+4.2在客户端 连接56 主机，测试其读写分离配置
+]# mysql -h192.168.4.56 -P4006 -uwebuser -p123456
+mysql>  select  @@hostname
+mysql>  执行插入或查询 （ 在51 和 52 本机查看记录）
