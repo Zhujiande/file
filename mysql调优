@@ -1,0 +1,94 @@
+3.3mysql调优
+3.3.1 如何优化mysql数据库服务器（那些原因会导致数据库服务器处理客户端的连接请求慢）
+A、硬件配置低，导致处理速度慢。 CPU  内存  存储磁盘
+                                                               接口   转速    15000/s
+uptime     free  -m      top  --> 0.0 wa
+
+b  、网络带宽窄   网络测速软件
+
+
+c 、提供服务软件的版本低，导致性能低下：
+1 查看服务运行时的参数配置   my.cnf
+mysql> show  variables;
+mysql> show  variables   like "%innodb%";
+2 常用参数：
+并发连接数量
+Max_used_connections/max_connections=0.85
+  500/x=0.85  * 100%   = 85%
+
+show  global  status  like "Max_used_connections";
+set  global   max_connections  =   数字；
+
+连接超时时间
+show   variables   like   "%timeout%";
+connect_timeout  客户端与服务器建立连接时tcp三次握手超时是时间
+wait_timeout  户端与服务器建立连接后，等待执行sql命令的超时时间。
+
+
+可以重复使用的线程的数量  thread
+show   variables   like   "%thread%";
+thread_cache_size = 9
+
+所有线程同时打开表的数量
+show   variables   like   "%open%";
+table_open_cache
+
+mysqld  -----> disk ---->x.ibd ----> memory  ----> disk
+
+与查询相关参数的设置  (字节)   mysqld
+select   *  from   t1;   read_buffer_size
+
+select   *  from   t1  order  by   字段名;sort_buffer_size
+
+
+select   *  from   t1  group  by   字段名;read_rnd_buffer_size
+name ----> index
+select  * from  t1  where  name="jim"; key_buffer-size  
+
+
+与查询缓存相关参数的设置
+show   variables   like   "%cache%";
+show   variables   like   "query_cache%";
+
+query_cache_wlock_invalidate | OFF  关
+当对myisam存储引擎的表执行查询时，若检查到有对表做写de sql操作,不从查询缓存里查询数据返回给客户端，而是
+
+等写操作完成后，重新查询数据返回给客户端。
+
+pc1   select    name  from t1  where name="bob";
+                   cache --->  name=bob
+
+pc2 select    name  from t1  where name="bob";
+     mysqld->  name= bob;
+
+pc3  update  t1  set  name="jack" wehre  name="bob";
+
+查看查询缓存的统计信息：
+show   global   status   like   "qcache%";
+Qcache_hits        10     记录在查询缓存里查询到数据的次数     
+Qcache_inserts   100   记录在查询缓存里查找数据的次数  
+Qcache_lowmem_prunes    清理查询缓存空间的次数
+
+3 修改服务运行时的参数：
+3.1 命令行设置，临时生效。
+mysql>  set   [global]  变量名=值；
+
+3.2在配置文件里设置永久生效:
+vim /etc/my.cnf
+[mysqld]
+变量名=值
+:wq
+
+4、程序编写sql查询语句太复杂导致，数据库服务器处理速度慢。
+开启数据库服务器的慢查询日志，记录超过指定时间显示查询结果的sql命令。                                           10s
+
+4.1 mysql数据库服务日志类型：
+错误日志  默认开启 记录服务在启动和运行过程中产生的错误信息log-error=/var/log/mysqld.log
+binlog日志 又被称作二进制日志：
+慢查询日志： 记录超过指定时间显示查询结果的sql命令
+查询日志： 记录所有sql命令。
+5、网络架构有问题（有数据传输瓶颈）
+
+
+
+ 
