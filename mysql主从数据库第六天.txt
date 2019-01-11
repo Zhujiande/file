@@ -21,6 +21,15 @@ a 创建用户授权
 b 启用binlog日志
 c 查看正在使用binlog日志信息
 
+mysql> grant  replication slave  on  *.*  to repluser@"192.168.4.52" 
+
+identified by "123qqq...A";
+vim /etc/my.cnf
+[mysqld]
+server_id=51
+log-bin=master51
+binlog_format="mixed"
+
 +++.3.2  配置从库
 a 验证主库的用户授权
 b 指定server_id
