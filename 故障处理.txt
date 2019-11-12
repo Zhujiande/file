@@ -1,0 +1,79 @@
+2019/10/24
+1、ec2无法开机自启，但手动可成功开启--》环境：centos8--》检查ec2开机自启的配置文件无误，并且手动写入rc.local，也无效，随后进行测试发现centos8并不会开机执行rc.local文件，随后将ec2加入systemd管理，写配置文件，将ec2用systemd管理，并且记住selinux设置为disabled
+
+2019/10/25：
+1、windows网络有问题，更新网卡驱动
+2、s3有问题，https没关闭
+3、某台物理机无法创建虚拟机：查看日志：显示cpu的ibpb指令集not found--》检查方向：cpu虚拟化--》virsh capabilities、cat /usr/share/libvirt/cpu_map.xml --》随后了解到同一批相同的物理机其他机器都正常，吧cpu_map.xml文件拷贝到有问题的虚拟机，解决完毕。--》学习了解cpu虚拟化
+virsh capabilities 　　　　   #显示当前连接节点所在的宿主机和其自身的架构和特性
+libvirt对CPU的定义提炼出标准的几种类型就在 cpu_map.xml文件里面查找
+----》
+品高云定义虚拟机cpu model为host-model，可在文件/usr/bingocloud/latest/output/vm-templete查看。
+常见三种cpu model： custom、host-model、host-passthrough
+custom：自己定义
+host-model：默认模式，根据物理CPU的特性，选择一个最靠近的标准CPU型号
+host-passthrough：直接将物理CPU暴露给虚拟机使用，在虚拟机上完全可以看到的就是物理CPU的型号
+4、虚拟机出现I/O的问题。一般是检查虚拟机系统以及存储卷所在的物理存储设备--》品高上的SAN存储，都是以逻辑卷的形式。pvs，lvs，vgs，发现是多路径设备，multipath -ll查看。
+5、rados存储网关（s3对象存储），使用systemdctl起服务的时候，注意要与配置文件定义的服务名称一致，否则会出现起了服务但是s3无法连接的状态
+
+2019/10/28
+1、实例迁移问题，资源是否足够，cpu指令集是否支持，通过virsh capabilities来过滤查看
+2、物理机开机报cpu问题，可从升级固件，改变cpu频率p state，或者修改NUMA
+3、ceph报osd near full的问题，根本还是增加osd，临时可使用ceph osd df查看使用情况，然后ceph osd crush reweight osd.ID 权重 更改osd的reweight权重，将near full权重降低一点
+
+2019/10/30
+1、fio测试io，iostat磁盘监控，iftop流量监控，dstat查看所有的实时系统资源
+2、重装ceph：删除原有的osd（service ceph stop osd.{id}、ceph osd crush remove osd.{id}、ceph osd rm {id}）--》删除原有的mon（ceph mon remove {id}）---》删除/var/lib/ceph/*文件---》替换ceph所有老版本的rpm包---》格式化准备磁盘---》使用脚本批量安装mon---》使用脚本安装osd---》设pg，建pool：images、instances、volumes
+3、7.1系统的ceph升级到12版本后，可能会出现无法创建实例或者存储卷的问题，是rbd无法map的问题。更改map方式为rbd-nbd：更改clc.cfg文件，添加 {rbd_map_type,"rbd-nbd"}. 所有节点，刷新配置生效，7.0.29才能用。还有要加载nbd内核模块，7.0.29的完整包找到nbd.ko，放到/lib/modules/`uname -r`/kernel/block/下，执行depmod -a分析所有能使用模块。modprobe nbd加载nbd模块。
+
+2019/10/31
+1、fio测试，使用libaio引擎，iodepth=64,将io压到极限，numjobs=1，使用单线程，rw=randrw,使用随机读或者写，可直接测裸盘。
+2、测顺序读写的话使用dd，挂载硬盘然后dd到文件里。不要直接dd到硬盘
+3、使用SSD做RAID的话，吧缓存关闭，不然数据经过缓存不经过ssd速度反而更慢
+4、迁移时，降低recovery速度，防止磁盘压力过大导致osd崩溃。osd_recovery_max_active = 3 、osd_recovery_sleep = 0 （通过sleep的控制可以大大的降低迁移磁盘的占用，对于本身磁盘性能不太好的硬件环境下，可以用这个参数进行一下控制，能够缓解磁盘压力过大引起的osd崩溃的情况）
+5、ceph-mgr是mon的守护进程，主要用于管理pg map作用、当ceph-mgr发生故障，相当于整个ceph集群都会出现严重问题、建议在每个mon节点中都创建独立的ceph-mgr（至少3个ceph-mon节点 ）、只需要在每个mon节点进行创建（每个mgr需要不同的独立的命名）
+6、ceph-mds是 Ceph 分布式文件系统的元数据服务器守护进程，一或多个 ceph-mds 例程协作着管理文件系统的命名空间、协调到共享 OSD 集群的访问
+
+2019/11/1
+1、更新数据库：停服务（cluster、daemon），上传新的数据包，解压进入rhel7，yum更新新的数据包，替换原有的scripts文件，更改config配置，起服务。
+2、重装数据库：卸载mysqlrpm包，删除配置和/opt/mysql目录，执行install.sh一键安装。前提：备份sql。将原sql导入进数据库即可。
+
+2019/11/11
+1、storecli  /  megacli
+2、 '/opt/bingocloud/storage使用率高，甚至达到100%'，是由于分布式存储算法自动调度控制，节点热点数据多就会占用空间大，100％后就不往该节点写入数据，不影响存储正常使用。分布式存储基本原理是将数据切片后分布到各个节点上，以提高数据安全性及读写并发性，而bingofs在其中加入了热点读写检测机制，尽可能保证读写频繁的节点上存放相应的切片数据，以降低数据的读写延时（不需要经过网络读写，牺性一定的并发性），如本地空间不能满足本地存放的条件，则分布到其他可用节点上，对性能影响小（提高了读写并发性）。
+3、添加SAN存储
+sh /bcshare/tools/scanfcsan.sh 
+sh calc_scsi_id.sh sdmf    --》 生成wwid
+vim /etc/multipath.conf  --》  添加wwid
+multipath -r    
+multipath -ll | less
+vgs  --》 找到物理设备sdmf对应的多路径名称
+vgcreate fcsan_7k2_lun29 /dev/mapper/mpathax 
+云平台添加物理存储
+/opt/bingocloud/latest/output/bin/bingocloud run others sh  /bcshare/tools/scanfcsan.sh 
+cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
+/opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
+/opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
+/opt/bingocloud/latest/output/bin/bingocloud run others "vgscan|grep lun29"
+
+scanfcsan.sh
+#!/bin/bash
+devices=$(ls /sys/class/fc_host)
+for i in $devices；do echo "- - -" > /sys/class/scsi_host/$i/scan；done
+
+scanipsan.sh
+#!/bin/bash
+iscsiadm -m discovery -t st -p 10.32.249.251:3260
+iscsiadm -m discovery -t st -p 10.32.249.252:3260
+iscsiadm -m node -L all
+iscsiadm -m session -R
+
+calc_scsi_id.sh
+#!/bin/bash
+device_name=$1
+/lib/udev/scsi_id --whitelisted --device=/dev/$device_name
+
+4、
+
+
+
