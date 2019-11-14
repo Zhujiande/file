@@ -74,7 +74,9 @@ device_name=$1
 /lib/udev/scsi_id --whitelisted --device=/dev/$device_name
 
 2019/11/14
-1、
-
+1、cat /etc/default/grub
+...
+GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定cpu频率
+使生效：grub2-mkconfig -o /boot/grub2/grub.cfg
 
 
