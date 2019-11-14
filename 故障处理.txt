@@ -50,7 +50,6 @@ multipath -ll | less
 vgs  --》 找到物理设备sdmf对应的多路径名称
 vgcreate fcsan_7k2_lun29 /dev/mapper/mpathax 
 云平台添加物理存储
-/opt/bingocloud/latest/output/bin/bingocloud run others sh  /bcshare/tools/scanfcsan.sh 
 cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
 /opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
 /opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
@@ -78,5 +77,5 @@ device_name=$1
 ...
 GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定cpu频率
 使生效：grub2-mkconfig -o /boot/grub2/grub.cfg
-
+2、
 
