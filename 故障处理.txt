@@ -42,7 +42,7 @@ host-passthrough：直接将物理CPU暴露给虚拟机使用，在虚拟机上�
 1、storecli  /  megacli
 2、 '/opt/bingocloud/storage使用率高，甚至达到100%'，是由于分布式存储算法自动调度控制，节点热点数据多就会占用空间大，100％后就不往该节点写入数据，不影响存储正常使用。分布式存储基本原理是将数据切片后分布到各个节点上，以提高数据安全性及读写并发性，而bingofs在其中加入了热点读写检测机制，尽可能保证读写频繁的节点上存放相应的切片数据，以降低数据的读写延时（不需要经过网络读写，牺性一定的并发性），如本地空间不能满足本地存放的条件，则分布到其他可用节点上，对性能影响小（提高了读写并发性）。
 3、添加SAN存储
-sh /bcshare/tools/scanfcsan.sh 
+sh /bcshare/tools/scanfcsan.sh    --》 扫描该接口下的SCSI磁盘设备
 sh calc_scsi_id.sh sdmf    --》 生成wwid
 vim /etc/multipath.conf  --》  添加wwid
 multipath -r    
@@ -73,7 +73,8 @@ calc_scsi_id.sh
 device_name=$1
 /lib/udev/scsi_id --whitelisted --device=/dev/$device_name
 
-4、
+2019/11/14
+1、
 
 
 
