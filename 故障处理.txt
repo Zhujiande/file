@@ -90,7 +90,7 @@ GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定
 2019/11/18
 1、使用sftp本地和远程传输文件，get下载，put上传，lcd切换本地路径
 2、更新数据库时记得更新openssl，否则更新失败
-3、
+
 
 
 
