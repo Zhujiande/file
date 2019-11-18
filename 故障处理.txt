@@ -35,8 +35,17 @@ host-passthrough：直接将物理CPU暴露给虚拟机使用，在虚拟机上�
 6、ceph-mds是 Ceph 分布式文件系统的元数据服务器守护进程，一或多个 ceph-mds 例程协作着管理文件系统的命名空间、协调到共享 OSD 集群的访问
 
 2019/11/1
-1、更新数据库：停服务（cluster、daemon），上传新的数据包，解压进入rhel7，yum更新新的数据包，替换原有的scripts文件，更改config配置，起服务。
+1、更新数据库：停服务（cluster、daemon），上传新的数据包，解压进入rhel7，yum更新perconna和openssl新的数据包，替换原有的scripts文件，更改config配置，起服务。
 2、重装数据库：卸载mysqlrpm包，删除配置和/opt/mysql目录，执行install.sh一键安装。前提：备份sql。将原sql导入进数据库即可。
+vim config
+ips=  ,
+vip=
+ref=
+pri=1/0   0为主，1为备
+sdn=0
+auth=395C97A2
+backup_plan=02:10
+keep_backups=5
 
 2019/11/11
 1、storecli  /  megacli
@@ -77,5 +86,27 @@ device_name=$1
 ...
 GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定cpu频率
 使生效：grub2-mkconfig -o /boot/grub2/grub.cfg
-2、
+
+2019/11/18
+1、使用sftp本地和远程传输文件，get下载，put上传，lcd切换本地路径
+2、更新数据库时记得更新openssl，否则更新失败
+3、
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
