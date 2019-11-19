@@ -68,6 +68,7 @@ multipath -ll | less
 vgs  --》 找到物理设备sdmf对应的多路径名称
 vgcreate fcsan_7k2_lun29 /dev/mapper/mpathax 
 云平台添加物理存储
+/opt/bingocloud/latest/output/bin/bingocloud run others sh /bcshare/tools/sscanfcsan.sh
 cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
 /opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
 /opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
@@ -101,14 +102,15 @@ multipath -ll | grep mpath 和  cat /etc/multipath.conf  | grep wwid 对比发�
 然后pvcreate  /dev/maper/mpath？
 vgcreate   *****  /dev/maper/mpath?
 然后云平台添加SAN存储，
+/opt/bingocloud/latest/output/bin/bingocloud run others sh /bcshare/tools/sscanfcsan.sh
 cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
 /opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
 /opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
 /opt/bingocloud/latest/output/bin/bingocloud run others “vgscan”
 
 2、
-
-
+重装云操作系统后，加入云平台，执行/opt/bingocloud/latest/output/tools/install/install_node.sh
+然后注册节点，/opt/bingocloud/latest/output/bin/bingocloud register ip
 
 
 
