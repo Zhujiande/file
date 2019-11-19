@@ -50,9 +50,18 @@ keep_backups=5
 2019/11/11
 1、storecli  /  megacli
 2、 '/opt/bingocloud/storage使用率高，甚至达到100%'，是由于分布式存储算法自动调度控制，节点热点数据多就会占用空间大，100％后就不往该节点写入数据，不影响存储正常使用。分布式存储基本原理是将数据切片后分布到各个节点上，以提高数据安全性及读写并发性，而bingofs在其中加入了热点读写检测机制，尽可能保证读写频繁的节点上存放相应的切片数据，以降低数据的读写延时（不需要经过网络读写，牺性一定的并发性），如本地空间不能满足本地存放的条件，则分布到其他可用节点上，对性能影响小（提高了读写并发性）。
-3、添加SAN存储
-sh /bcshare/tools/scanfcsan.sh    --》 扫描该接口下的SCSI磁盘设备
+3、添加SAN存储（看实际环境灵活处理）
+sh /bcshare/tools/sscanfcsan.sh        --》 扫描该接口下的SCSI磁盘设备
+#!/bin/bash
+devices=$(ls /sys/class/fc_host)
+for i in $devices；do echo "- - -" > /sys/class/scsi_host/$i/scan；done   
+
 sh calc_scsi_id.sh sdmf    --》 生成wwid
+calc_scsi_id.sh
+#!/bin/bash
+device_name=$1
+/lib/udev/scsi_id --whitelisted --device=/dev/$device_name
+
 vim /etc/multipath.conf  --》  添加wwid
 multipath -r    
 multipath -ll | less
@@ -64,22 +73,12 @@ cp /etc/multipath.conf  /bcshare/tools/multipath.conf
 /opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
 /opt/bingocloud/latest/output/bin/bingocloud run others "vgscan|grep lun29"
 
-scanfcsan.sh
-#!/bin/bash
-devices=$(ls /sys/class/fc_host)
-for i in $devices；do echo "- - -" > /sys/class/scsi_host/$i/scan；done
-
 scanipsan.sh
 #!/bin/bash
 iscsiadm -m discovery -t st -p 10.32.249.251:3260
 iscsiadm -m discovery -t st -p 10.32.249.252:3260
 iscsiadm -m node -L all
 iscsiadm -m session -R
-
-calc_scsi_id.sh
-#!/bin/bash
-device_name=$1
-/lib/udev/scsi_id --whitelisted --device=/dev/$device_name
 
 2019/11/14
 1、cat /etc/default/grub
@@ -90,8 +89,24 @@ GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定
 2019/11/18
 1、使用sftp本地和远程传输文件，get下载，put上传，lcd切换本地路径
 2、更新数据库时记得更新openssl，否则更新失败
+3、升级云平台备份数据库，吧主库和备库都备份，最稳妥是再备份sql
 
+2019/11/19
+1、添加SAN存储（看实际环境灵活处理）
+直接扫描之后就能发现多路径的，
+device=ls /sys/class/fc_host
+echo "- - -" > /sys/class/scsi_host/$device/scan
+扫描后可出现多路径设备
+multipath -ll | grep mpath 和  cat /etc/multipath.conf  | grep wwid 对比发现新添加的多路径设备
+然后pvcreate  /dev/maper/mpath？
+vgcreate   *****  /dev/maper/mpath?
+然后云平台添加SAN存储，
+cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
+/opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
+/opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
+/opt/bingocloud/latest/output/bin/bingocloud run others “vgscan”
 
+2、
 
 
 
