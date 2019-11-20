@@ -112,9 +112,25 @@ cp /etc/multipath.conf  /bcshare/tools/multipath.conf
 重装云操作系统后，加入云平台，执行/opt/bingocloud/latest/output/tools/install/install_node.sh
 然后注册节点，/opt/bingocloud/latest/output/bin/bingocloud register ip
 
+2019/11/20
+1、添加SAN存储，部分设备扫描完scsi设备后没有发现到多路径设备，而是出现硬盘设备，可以修改lvm配置文件
+vim /etc/lvm/lvm.conf
+fileter = [ “a|/dev/mapper/mpath*|”, "r|.*|" ]
+配置完成后手工执行vgsan扫描一遍
 
+以下是一些过滤设置例子：
+发现所有设备，不过滤:
+filter = [ “a/.*/” ]
+过滤光驱设备:
+filter = [ “r|/dev/cdrom|” ]
+除设备名含loop的设备外过滤其他所有设备:
+filter = [ “a/loop.*/”, “r/.*/” ]
+除设备名含loop和hd的设备，过滤其余所有设备:
+filter =[ “a|loop.*|”, “a|/dev/hd.*|”, “r|.*|” ]
+只扫描/dev/hda8:
+filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 
-
+2、存储中心删除了lun，但物理机还有链路的记录信息，vgs会提示io block：multipath -ll mpathj 查看到分链路sd**，然后用dmsetup删除：dmsetup remove /dev/mapper/mpathj，multpath -r后正常
 
 
 
