@@ -132,7 +132,8 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 
 2、存储中心删除了lun，但物理机还有链路的记录信息，vgs会提示io block：multipath -ll mpathj 查看到分链路sd**，然后用dmsetup删除：dmsetup remove /dev/mapper/mpathj，multpath -r后正常
 
-
+2019/11/21
+1、ec2config的v2.0.0版本是由systemd管理的，执行完python ec2config_install.py后，需要systemctl起服务
 
 
 
