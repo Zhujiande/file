@@ -31,6 +31,7 @@ host-passthrough：直接将物理CPU暴露给虚拟机使用，在虚拟机上�
 2、测顺序读写的话使用dd，挂载硬盘然后dd到文件里。不要直接dd到硬盘
 3、使用SSD做RAID的话，吧缓存关闭，不然数据经过缓存不经过ssd速度反而更慢
 4、迁移时，降低recovery速度，防止磁盘压力过大导致osd崩溃。osd_recovery_max_active = 3 、osd_recovery_sleep = 0 （通过sleep的控制可以大大的降低迁移磁盘的占用，对于本身磁盘性能不太好的硬件环境下，可以用这个参数进行一下控制，能够缓解磁盘压力过大引起的osd崩溃的情况）
+   eg:ceph tell osd.* injectargs "--osd_recovery_sleep 0.4"
 5、ceph-mgr是mon的守护进程，主要用于管理pg map作用、当ceph-mgr发生故障，相当于整个ceph集群都会出现严重问题、建议在每个mon节点中都创建独立的ceph-mgr（至少3个ceph-mon节点 ）、只需要在每个mon节点进行创建（每个mgr需要不同的独立的命名）
 6、ceph-mds是 Ceph 分布式文件系统的元数据服务器守护进程，一或多个 ceph-mds 例程协作着管理文件系统的命名空间、协调到共享 OSD 集群的访问
 
@@ -135,9 +136,13 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 2019/11/21
 1、ec2config的v2.0.0版本是由systemd管理的，执行完python ec2config_install.py后，需要systemctl起服务
 
-
-
-
+2019/11/22
+1、获取和修改pg数：ceph osd  pool  get/set   pool-name   pg_num  
+                  ceph osd  pool  get/set   pool-name   pgp_num
+2、导入ceph：rbd -m  xxxx   import  目标路径/   -p  pool-name   “alias”
+ 从ceph导出：rbd -m xxxx  export -p pool-name --image 镜像名称 目标路径/alias
+3、降低ceph数据平衡recovery速度：ceph tell osd.* injectargs "--osd-recovery-sleep  0.5"
+4、
 
 
 
