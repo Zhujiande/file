@@ -142,7 +142,10 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 2、导入ceph：rbd -m  xxxx   import  目标路径/   -p  pool-name   “alias”
  从ceph导出：rbd -m xxxx  export -p pool-name --image 镜像名称 目标路径/alias
 3、降低ceph数据平衡recovery速度：ceph tell osd.* injectargs "--osd-recovery-sleep  0.5"
-4、
+
+2019/11/25
+1、RAID卡如果是没有电池的，要吧WT改为WB必须要加forced
+2、ll /dev/disk/by-path/  --->  四元组的第三个数值与 megacli -ldpdinfo -a0 | grep  virtual driver： ？数值对应
 
 
 
