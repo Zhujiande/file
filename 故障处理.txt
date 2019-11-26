@@ -148,6 +148,22 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 2、ll /dev/disk/by-path/  --->  四元组的第三个数值与 megacli -ldpdinfo -a0 | grep  virtual driver： ？数值对应
 
 
+2019/11/26
+1、bingofs chunks missing 修复 
+登陆到bingofs master主机，查找块丢失的内容：
+find /bcshare -type f |xargs -i bingofscheckfile {} |grep -B1 '0 cop'
+修复损坏块文件：
+bingofsfilerepair /bcshare/cluster/instance/i-********/instance
+2、qemu版本不一致导致热迁移失败
+3、ceph状态卡住，可能是设置了策略路由导致ceph集群内部网路通信异常，可使用ss -ntp 查看是否有SYN，TIMEWAIT状态。
+4、
+
+
+
+
+
+
+
 
 
 
