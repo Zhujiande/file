@@ -77,16 +77,17 @@ cp /etc/multipath.conf  /bcshare/tools/multipath.conf
 
 scanipsan.sh
 #!/bin/bash
-iscsiadm -m discovery -t st -p 10.32.249.251:3260
-iscsiadm -m discovery -t st -p 10.32.249.252:3260
-iscsiadm -m node -L all
-iscsiadm -m session -R
+iscsiadm -m discovery -t st -p 10.32.249.251:3260    //发现
+iscsiadm -m discovery -t st -p 10.32.249.252:3260    //发现
+iscsiadm -m node -L all    //登录
+iscsiadm -m session -R    //如果一个Target下新增了一个SAN资源，在服务器可以使用iscsiadm –m session –R命令刷新（rescan）已连接的iSCSI session以识别新的SAN资源：
 
 2019/11/14
 1、cat /etc/default/grub
 ...
 GRUB_CMDLINE_LINUX="crashkernel=auto rhgb quiet intel_pstate=disable"   ##固定cpu频率
 使生效：grub2-mkconfig -o /boot/grub2/grub.cfg
+2、也可在此查看： cat /proc/cmdline
 
 2019/11/18
 1、使用sftp本地和远程传输文件，get下载，put上传，lcd切换本地路径
@@ -103,7 +104,7 @@ multipath -ll | grep mpath 和  cat /etc/multipath.conf  | grep wwid 对比发�
 然后pvcreate  /dev/maper/mpath？
 vgcreate   *****  /dev/maper/mpath?
 然后云平台添加SAN存储，
-/opt/bingocloud/latest/output/bin/bingocloud run others sh /bcshare/tools/sscanfcsan.sh
+/opt/bingocloud/latest/output/bin/bingocloud run others sh /bcshare/tools/scanfcsan.sh
 cp /etc/multipath.conf  /bcshare/tools/multipath.conf 
 /opt/bingocloud/latest/output/bin/bingocloud run others cp /bcshare/tools/multipath.conf  /etc/
 /opt/bingocloud/latest/output/bin/bingocloud run others multipath -r
@@ -140,7 +141,7 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
 1、获取和修改pg数：ceph osd  pool  get/set   pool-name   pg_num  
                   ceph osd  pool  get/set   pool-name   pgp_num
 2、导入ceph：rbd -m  xxxx   import  目标路径/   -p  pool-name   “alias”
- 从ceph导出：rbd -m xxxx  export -p pool-name --image 镜像名称 目标路径/alias
+ 从ceph导出：rbd -m xxxx  export -p pool-name  镜像名称 目标路径/alias
 3、降低ceph数据平衡recovery速度：ceph tell osd.* injectargs "--osd-recovery-sleep  0.5"
 
 2019/11/25
@@ -156,8 +157,15 @@ find /bcshare -type f |xargs -i bingofscheckfile {} |grep -B1 '0 cop'
 bingofsfilerepair /bcshare/cluster/instance/i-********/instance
 2、qemu版本不一致导致热迁移失败
 3、ceph状态卡住，可能是设置了策略路由导致ceph集群内部网路通信异常，可使用ss -ntp 查看是否有SYN，TIMEWAIT状态。
-4、
 
+2019/11/27
+1、更改windows密码：net user administrator XXXXX
+2、重置密码：新建密钥并下载---》详情添加密钥名称---》获取密码输入密钥
+3、云环境一些基本默认的配置： cat  /proc/cmdline
+4、云平台需要关闭numa， numactl --hardware    
+available: 1 nodes      只有一个节点说明numa已经关闭了
+5、dmidecode  查看服务器硬件信息   -t
+6、
 
 
 
