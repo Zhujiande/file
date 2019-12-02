@@ -165,8 +165,10 @@ bingofsfilerepair /bcshare/cluster/instance/i-********/instance
 4、云平台需要关闭numa， numactl --hardware    
 available: 1 nodes      只有一个节点说明numa已经关闭了
 5、dmidecode  查看服务器硬件信息   -t
-6、
 
+2019/12/2
+1、查看管理口ipmi地址：ipmitool lan print
+2、
 
 
 
