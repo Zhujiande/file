@@ -196,7 +196,48 @@ net.ipv4.tcp_max_tw_buckets = 5000
 2、在线修改当前ceph配置：ceph tell osd.* injectargs “--参数  数值”
 3、集群出现Slow Request告警：客户端发起写请求，待访问对象在一个或者多个副本处在降级状态。
 对于客户端发起写请求，必须要求修复该对象的所有降级副本后才能继续处理写请求，当请求进来，触发降级对象强制执行同步修复很容易导致客户端读写请求时延显著变长，进而导致集群出现slow request告警。
-4、
+
+2019/12/5
+1、
+#测试文件，可直接测裸盘
+filename=
+#随机读randread，随机写randwrite，随机读写randrw
+rw=randread
+#单次io块文件大小
+bs=4k
+#io引擎
+ioengine=libaio
+#跳过缓存
+direct=1
+#测试深度，将io压到极限
+iodepth=64
+#单线程
+numjobs=1
+#测试时长，不定义则每次4k直到吧文件写完为止
+runtime=
+2、fio和dd
+ 随机写：
+ ①、fio -name=asd -filename=/dev/vdb -bs=4k -runtime=180 -iodepth=64 -numjobs=1 -direct=1 -ioengine=libaio rw=randwrite 
+ write: io=316828KB, bw=1757.8KB/s, iops=439, runt=180252mse
+ ②、mount /dev/vdb /test ----》  time dd if=/dev/zero of=/test/test1.file bs=4M count=100  oflag=direct
+ 419430400 bytes (419 MB) copied, 22.2305 s, 18.9 MB/s
+ 随机读：
+ ①、fio -name=asd -filename=/dev/vdb -bs=4k -runtime=180 -iodepth=64 -numjobs=1 -direct=1 -ioengine=libaio -rw=randread
+ read : io=2703.7MB, bw=15350KB/s, iops=3837, runt=180358msec
+ ②、time dd if=/dev/vdb of=/dev/null  bs=4M count=1000  iflag=direct
+ 4194304000 bytes (4.2 GB) copied, 105.86 s, 39.6 MB/s
+ 3、升级openssh
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
 
 
 
