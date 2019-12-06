@@ -228,12 +228,28 @@ runtime=
  4194304000 bytes (4.2 GB) copied, 105.86 s, 39.6 MB/s
  3、升级openssh
  
- 
- 
- 
- 
- 
- 
+ 2019/12/6
+1、rhel6.5升级mysql到5.6.45
+1）、安装percona软件包时报错，与原percona软件包冲突，可用rpm -e --nodeps 卸载后，装要安装的软件包
+2）、将新的scripts拷贝
+3）、更改配置文件config 
+vim config
+ips=  ,
+vip=
+ref=
+pri=1/0   0为主，1为备
+sdn=0
+auth=395C97A2
+backup_plan=02:10
+keep_backups=5
+
+2、重装数据库
+1）安装软件包
+2）执行install.sh
+3）停服务，拷贝data和my.cnf过来
+4）删除data目录里面ib_logfile*（否则会报错）
+5）启动
+
 
 
 
