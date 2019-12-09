@@ -251,7 +251,15 @@ keep_backups=5
 5）启动
 
 
-
+2019/12/9
+1、 1 osds exist in the crush map but not in the osdmap  少做了第三步
+systemctl stop ceph-osd@38.serivce
+ceph osd out 38
+ceph osd crush remove osd.38
+ceph osd rm 38
+2、物理磁盘定位：
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -start -physdrv[64:2] -a0 # 让slot 2的硬盘灯闪烁
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -stop -physdrv[64:2] -a0 # 停止闪烁
 
 
 
