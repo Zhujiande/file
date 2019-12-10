@@ -2,7 +2,7 @@
 1、ec2无法开机自启，但手动可成功开启--》环境：centos8--》检查ec2开机自启的配置文件无误，并且手动写入rc.local，也无效，随后进行测试发现centos8并不会开机执行rc.local文件，随后将ec2加入systemd管理，写配置文件，将ec2用systemd管理，并且记住selinux设置为disabled
 
 2019/10/25：
-1、windows网络有问题，更新网卡驱动
+1、windows网络有问题，更新网卡驱动 
 2、s3有问题，https没关闭
 3、某台物理机无法创建虚拟机：查看日志：显示cpu的ibpb指令集not found--》检查方向：cpu虚拟化--》virsh capabilities、cat /usr/share/libvirt/cpu_map.xml --》随后了解到同一批相同的物理机其他机器都正常，吧cpu_map.xml文件拷贝到有问题的虚拟机，解决完毕。--》学习了解cpu虚拟化
 virsh capabilities 　　　　   #显示当前连接节点所在的宿主机和其自身的架构和特性
@@ -260,6 +260,38 @@ ceph osd rm 38
 2、物理磁盘定位：
 # /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -start -physdrv[64:2] -a0 # 让slot 2的硬盘灯闪烁
 # /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -stop -physdrv[64:2] -a0 # 停止闪烁
+
+2019/12/10
+1、ceph出现 HEALTH_ERR 1 scrub errors; Possible data damage: 1 pg inconsistent 
+1）ceph health detail      查看详细信息
+2）ceph osd find      找出pg异常所在osd的节点
+3）systemctl stop ceph-osd@xx     停止该osd
+4）ceph-osd -i xx --flush-jounal      冲洗journal
+5）systemctl start ceph-osd@xx               
+5）ceph pg repair xxxx          重启后等几分钟没反应后再执行修复
+
+2、top命令
+%Cpu(s): 58.3 us, 40.7 sy,  0.0 ni,  0.0 id,  0.1 wa,  0.0 hi,  0.9 si,  0.0 st
+ us — 用户空间占用CPU的百分比。
+ sy — 内核空间占用CPU的百分比。
+ ni — 改变过优先级的进程占用CPU的百分比
+ id — 空闲CPU百分比
+ wa — IO等待占用CPU的百分比
+ hi — 硬中断（Hardware IRQ）占用CPU的百分比
+ si — 软中断（Software Interrupts）占用CPU的百分比
+
+
+3、
+# 查看物理CPU个数
+[root@AAA ~]# cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
+
+# 查看每个物理CPU中core的个数(即核数)
+[root@AAA ~]# cat /proc/cpuinfo| grep "cpu cores"| uniq
+
+# 查看逻辑CPU的个数
+[root@AAA ~]# cat /proc/cpuinfo| grep "processor"| wc -l
+
+系统负载uptime不要超过processor的值！！
 
 
 
