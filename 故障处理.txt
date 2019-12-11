@@ -280,7 +280,6 @@ ceph osd rm 38
  hi — 硬中断（Hardware IRQ）占用CPU的百分比
  si — 软中断（Software Interrupts）占用CPU的百分比
 
-
 3、
 # 查看物理CPU个数
 [root@AAA ~]# cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
@@ -292,6 +291,25 @@ ceph osd rm 38
 [root@AAA ~]# cat /proc/cpuinfo| grep "processor"| wc -l
 
 系统负载uptime不要超过processor的值！！
+
+
+2019/12/11
+1、
+virsh list 
+virsh domblklist xx
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
