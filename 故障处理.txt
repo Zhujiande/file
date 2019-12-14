@@ -301,7 +301,37 @@ virsh domblklist xx
 2019/12/13
 1、strings命令 在对象文件或二进制文件中查找可打印的字符串。字符串是4个或更多可打印字符的任意序列，以换行符或空字符结束。 strings命令对识别随机对象文件很有用。（实现对二进制文件的搜索）
 
+2、
+更改openssh版本号：（例如由7.9p1修改为8.1p1）
+whereis sshd  
+sstrings /usr/sbin/sshd  |  grep OpenSSH
+cp /usr/sbin/sshd /usr/sbin/sshd.bak
+sed -i 's/OpenSSH_7.9p1/OpenSSH_8.1p1/g' /usr/sbin/sshd
+/etc/init.d/sshd restart
+###如果更改失败，则继续更改下面：（遇到过之前更改过版本号，升级后不显示新的版本号的情况需要修改下面配置文件）
+which  ssh
+strings /usr/local/openssh/bin/ssh | grep OpenSSH
+cp /usr/local/openssh/bin/ssh /usr/local/openssh/bin/ssh.bak
+sed -i 's/OpenSSH_7.9p1/OpenSSH_8.1p1/g' /usr/local/openssh/bin/ssh
 
+更改openssl版本号：(例如由1.0.2k修改为1.0.1e)
+which openssl
+ldd /usr/local/openssl/bin/openssl | grep libcryp   （libcrypto为存放openssl版本号的库）
+   libcrypto.so.1.0.0 => /usr/local/openssl/lib/libcrypto.so.1.0.0 (0x00007feb28aa4000)
+strings  /usr/local/openssl/lib/libcrypto.so.1.0.0 | grep 1.0.2k
+cp /usr/local/openssl/lib/libcrypto.so.1.0.0 /usr/local/openssl/lib/libcrypto.so.1.0.0.bak
+sed -i 's/1.0.2k/1.0.1e/g' /usr/local/openssl/lib/libcrypto.so.1.0.0
+/etc/init.d/sshd restart
+
+3、
+whereis
+whereis命令只能用于程序名的搜索，而且只搜索二进制文件（参数-b）、man说明文件（参数-m）和源代码文件（参数-s）。如果省略参数，则返回所有信息。
+
+which
+which命令的作用是，在PATH变量指定的路径中，搜索某个系统命令的位置，并且返回第一个搜索结果。也就是说，使用which命令，就可以看到某个系统命令是否存在，以及执行的到底是哪一个位置的命令。
+
+ 4、
+ ldd命令：查看程序需要依赖什么库 
 
 
 
