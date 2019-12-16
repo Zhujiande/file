@@ -304,7 +304,7 @@ virsh domblklist xx
 2、
 更改openssh版本号：（例如由7.9p1修改为8.1p1）
 whereis sshd  
-sstrings /usr/sbin/sshd  |  grep OpenSSH
+strings /usr/sbin/sshd  |  grep OpenSSH
 cp /usr/sbin/sshd /usr/sbin/sshd.bak
 sed -i 's/OpenSSH_7.9p1/OpenSSH_8.1p1/g' /usr/sbin/sshd
 /etc/init.d/sshd restart
@@ -333,17 +333,37 @@ which命令的作用是，在PATH变量指定的路径中，搜索某个系统�
  4、
  ldd命令：查看程序需要依赖什么库 
 
+2019/12/16
+1、
+日志盘损坏
+1)更换日志盘，修改journal链接
+2)重建日志系统
+ceph-osd --mkjournal -i {id}
 
+数据盘损坏
+1)更换数据盘，格式化，建立journal
+2)获取osd-uuid
+ceph osd dump|grep osd.{id}
+3)重建数据系统
+ceph-osd -i {id} --mkfs --osd-uuid {osd-uuid}
 
+例如：
+ceph更换硬盘：
+更换硬盘后：
+一、使用MegaCLi命令，megacli -pdlist -a0 | less  ,找到firmware stat状态是还没做raid的硬盘，记住enclosure device id:slot number 。 使用命令做对应的raid
+二、做完raid，观察输出的virtual driver：？ 的值，然后使用命令 ll /dev/disk/by-path，一般在四元组<host:channel:id:lun>，id的值会与之对应，然后观察对应的是哪块硬盘。然后格式化该硬盘。
+三、然后挂载ceph的对应的osd目录到该硬盘，查看隔壁的目录，使用realpath看它的journal盘所对应的实际硬盘，猜测本jounal所对应的硬盘，使用 ceph osd dump|grep osd.? ，观察最后的uuid，然后使用命令 dd if=/dev/??? bs=1 count=512 | hexdump -C 打印该硬盘的十六进制信息，查看和osd dump出来的uuid是否一致，如果一致则该硬盘就是这个osd的journal盘，然后ll /dev/disk/by-partuuid | grep “刚刚查找到的journal盘”，进入osd挂载目录，建立journal软链接，ln -s /dev/disk/by-partuuid/XXXXXX  journal
+四、清除原journal盘的头部信息，一般清200M,dd if=/dev/zero of=/dev/XXX bs=1M count=512.执行这一步前可使用iostat命令查看该硬盘是否有在使用
+五、重建数据系统： ceph-osd -i {id} --mkfs --osd-uuid {osd-uuid}
+六、设置开机自动挂载
 
+init=/mnt/sysimage/bin/bash
 
+Huawei12#$
 
+mount -l
 
-
-
-
-
-
+xfs_repaire
 
 
 
