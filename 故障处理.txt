@@ -379,10 +379,19 @@ ceph-mon -i {id} --mkfs --monmap {monmap}
 集群掉电导致无法正常启动，很可能是文件系统损坏，开机运行rc.local或者/etc/fstab出问题
 1）挂载镜像进入救援模式，在救援模式里面将rc.local /etc/fstab注释，重启
 2）在启动界面按c也可进入救援模式
-3）（骚操作）若没有镜像，可在启动界面按e ，进行编辑，将只读 ro改为 rw，，再加上init=/mnt/sysimage/bin/bash，可进入救援模式，进行上述操作
+3）（骚操作）若没有镜像，可在启动界面按e ，进行编辑，将只读 ro改为 rw，，再加上init=/mnt/sysimage/bin/bash，可进入救援模式，chroot  ，进行上述操作
 4）mount -l查看文件系统挂载有无问题，如有问题，可使用xfs_repair /dev/*** 进行修复
 5）xfs_repair修复失败，可先执行xfs_repair -L /dev/*** 清空日志，再进行修复
 6）修复成功后记得恢复挂载和恢复启动rc.local得服务
+
+2019/12/18
+1、ceph osd  perf     #主要解决单块磁盘问题，如果有问题应及时剔除osd。统计的是平均值。。如果出现io线程出现超时，可查看是否是osd磁盘性能出现了瓶颈。。可以结合Megacli查看磁盘是否有坏道
+2、
+
+
+
+
+
 
 
 
