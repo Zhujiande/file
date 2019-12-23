@@ -405,7 +405,41 @@ sas3ircu  0  locate  E：S   on
 
 2019/12/20
 1、windows修复磁盘：   cmd   ---》  chkdsk  盘符：  /f  
-2、
+
+
+2019/12/23
+1、执行vgs或者pvs出现如下大量warning时，是/etc/lvm/lvm.conf没有做过滤条件：
+例如：fileter = [ “a|/dev/mapper/mpath*|”, "r|.*|" ]    只允许多路径pv名为mpath*的，拒绝所有
+WARNING: PV jFToQp-04Ir-0LC4-czPm-f9P2-KANW-5ri19Z prefers device /dev/mapper/fcsan_7k2_lun06-i--F247956A.instance5 because device was seen first.
+WARNING: PV IkE2Ap-fCzY-lM4O-i8SA-M0sM-hzKZ-R5rZB0 on /dev/mapper/fcsan_7k2_lun05-i--BA23D806.instance2 was already found on /dev/mapper/fcsan_7k2_lun05-i--6BC57BF5.instance2.
+ 
+2、数据库修改实例状态： bingocloud---》instance
+ select instanceStatus from instance where instanceID="***";
+ update instance set instanStatus="****" where instanceID="***"
+备注：
+运行中：running
+已销毁：terminated
+已关机：stopped
+销毁中：shutting-down  （不正常）
+
+3、
+dmsetup ls
+
+4、
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!开启用户命令审计!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+在/etc/bashrc文件末尾添加如下：
+export PROMPT_COMMAND='{ Cmd=$(history 1 | { read x y; echo $y; }); logger -p local5.info "$HOSTNAME [HIST] : $SSH_CLIENT : $PWD : $Cmd"; }'
+
+在/etc/rsyslog.conf文件修改以下内容：将
+*.info;mail.none;authpriv.none;cron.none         /var/log/messages
+修改为
+*.info;mail.none;authpriv.none;cron.none;local5.none                /var/log/messages
+添加以下内容：
+local5.*    /var/log/commands
+
+
+
+
 
 
 
