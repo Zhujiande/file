@@ -473,4 +473,21 @@ mount 命令的 -o loop 选项可以将任意一个 loopback 文件系统挂载�
 # fdisk /dev/loop1
 
 
+2019/12/25
+1、fcsan出问题：
+1）查看光纤口是否是online。cat /sys/class/fc_host/host15/port_state   （如果是linkdown，联系客户检查端口）
+2）扫描：device=ls /sys/class/fc_host 
+        echo "- - -" > /sys/class/scsi_host/$device/scan
+3）光纤通道出现问题。检查光纤交换机
+
+2、strace  执行命令卡住，可使用该命令跟踪
+例如： strace df -h
+
+3、日志出现类似以下报错：是qemu和libvirt版本不匹配。可进行升级
+$su_do timeout 30 virsh create /opt/bingocloud/run/instance/i-6759B247/libvirt.xml
+error: Failed to create domain from /opt/bingocloud/run/instance/i-6759B247/libvirt.xml
+
+$su_do timeout 30 virsh create /opt/bingocloud/run/instance/i-AF66E5C4/libvirt.xml
+error: failed to connect to the hypervisor
+error: Failed to connect socket to '/var/run/libvirt/libvirt-sock': No such file or directory
 
