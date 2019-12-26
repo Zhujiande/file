@@ -491,3 +491,17 @@ $su_do timeout 30 virsh create /opt/bingocloud/run/instance/i-AF66E5C4/libvirt.x
 error: failed to connect to the hypervisor
 error: Failed to connect socket to '/var/run/libvirt/libvirt-sock': No such file or directory
 
+2019/12/26
+1、建密钥服务异常，可能是版本太低（比如v6），需要打补丁：
+1）将补丁包解压到/opt/bingocloud/latest/目录下
+2）执行/opt/bingocloud/latest/ouput/bin/bingocloud client 
+util:nl(clc_create_key_pair).
+q().
+
+2、备云控无法通过web访问，服务和端口一切正常，可能是时间同步问题
+
+
+
+
+
+
