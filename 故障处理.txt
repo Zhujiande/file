@@ -18,7 +18,7 @@ host-passthrough：直接将物理CPU暴露给虚拟机使用，在虚拟机上�
 
 2019/10/28
 1、实例迁移问题，资源是否足够，cpu指令集是否支持，通过virsh capabilities来过滤查看
-2、物理机开机报cpu问题，可从升级固件，改变cpu频率p state，或者修改NUMA
+2、物理机开机报cpu问题，可从升级固件，改变cpu频率p state，关闭NUMA
 3、ceph报osd near full的问题，根本还是增加osd，临时可使用ceph osd df查看使用情况，然后ceph osd crush reweight osd.ID 权重 更改osd的reweight权重，将near full权重降低一点
 
 2019/10/30
@@ -377,9 +377,9 @@ ceph-mon -i {id} --mkfs --monmap {monmap}
 
 3、
 集群掉电导致无法正常启动，很可能是文件系统损坏，开机运行rc.local或者/etc/fstab出问题
-1）挂载镜像进入救援模式，在救援模式里面将rc.local /etc/fstab注释，开机仍然失败的话，直接修复系统盘，重启
+1）挂载镜像进入救援模式，在救援模式里面将/etc/rc.local,,,/etc/fstab注释，开机仍然失败的话，直接修复系统盘，重启
 2）在启动界面按c也可进入救援模式
-3）（骚操作）若没有镜像，可在启动界面按e ，进行编辑，将只读 ro改为 rw，，再加上init=/mnt/sysimage/bin/bash，可进入救援模式，进行上述操作
+3）（骚操作）若没有镜像，可在启动界面按e ，进行编辑，将只读 ro改为 rw，，再加上init=/mnt/sysimage/bin/bash，可进行上述操作，但不能修复文件系统
 4）mount -l查看文件系统挂载有无问题，如有问题，可使用xfs_repair /dev/*** 进行修复
 5）xfs_repair修复失败，可先执行xfs_repair -L /dev/*** 清空日志，再进行修复
 6）修复成功后记得恢复挂载和恢复启动rc.local得服务
@@ -492,7 +492,7 @@ error: failed to connect to the hypervisor
 error: Failed to connect socket to '/var/run/libvirt/libvirt-sock': No such file or directory
 
 2019/12/26
-1、建密钥服务异常，可能是版本太低（比如v6），需要打补丁：
+1、建密钥显示服务异常，可能是版本太低（比如v6），升级了openssl，需要打补丁：
 1）将补丁包解压到/opt/bingocloud/latest/目录下
 2）执行/opt/bingocloud/latest/ouput/bin/bingocloud client 
 util:nl(clc_create_key_pair).
