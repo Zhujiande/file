@@ -142,7 +142,7 @@ filter = [ “a|^/dev/hda8$|”, “r/.*/” ]
                   ceph osd  pool  get/set   pool-name   pgp_num
 2、导入ceph：rbd -m  xxxx   import  目标路径/   -p  pool-name   “alias”
  从ceph导出：rbd -m xxxx  export -p pool-name  镜像名称 目标路径/alias
-3、降低ceph数据平衡recovery速度：ceph tell osd.* injectargs "--osd-recovery-sleep  0.5"
+3、降低ceph数据平衡recovery速度：ceph tell osd.* injectargs "--osd-recovery-F  0.5"
 
 2019/11/25
 1、RAID卡如果是没有电池的，要吧WT改为WB必须要加forced
@@ -513,8 +513,11 @@ bingofsfilerepair /bcshare/cluster/instance/i-********/instance
 再重启bingofsmster
 备注：主要元数据文件metadata.bfs在master运行时 会被命名为metadata.bfs.bak
 
-3、
-
+2020/1/3
+1、
+物理磁盘定位：
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -start -physdrv[64:2] -a0 # 让slot 2的硬盘灯闪烁
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -stop -physdrv[64:2] -a0 # 停止闪烁
 
 
 
