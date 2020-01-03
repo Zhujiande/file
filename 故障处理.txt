@@ -519,6 +519,10 @@ bingofsfilerepair /bcshare/cluster/instance/i-********/instance
 # /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -start -physdrv[64:2] -a0 # 让slot 2的硬盘灯闪烁
 # /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -stop -physdrv[64:2] -a0 # 停止闪烁
 
+2、
+查看硬盘信息:  (做了raid的)
+smartctl -a -d megaraid,<device ID> /dev/***
+或者：  smartctl -a -d sat+megaraid,<device ID> /dev/***
 
 
 
