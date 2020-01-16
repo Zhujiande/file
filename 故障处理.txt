@@ -526,4 +526,15 @@ smartctl -a -d megaraid,<device ID> /dev/***
 
 
 
+2020/1/16
+1、ceph修复不一致，，ceph health detail  --》  ceph pg repair  ---》  ceph -w查看
+2、更换ceph硬盘
+3、脚本安装osd失败？？ 观看报错信息，，sh -x   debug ，，，
+4、man mkfs.xfs   -m 参数后面可加 uuid 才行，，，，ceph-mkfs  -f  $device ...  
+5、看安装脚本是从哪里调脚本，，比如ceph-mkfs是从/opt/ceph/install/bin/下 ，，
+6、
+
+
+
+
 
