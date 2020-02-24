@@ -535,6 +535,16 @@ smartctl -a -d megaraid,<device ID> /dev/***
 6、
 
 
+2020/2/24
+1、访问云平台提示： 服务异常: WSREP has not yet prepared node for application use，交换机网络问题。
+2、PG是指定存储池存储对象的目录有多少个，PGP是存储池PG的OSD分布组合个数
+   PG的增加会引起PG内的数据进行分裂，分裂到相同的OSD上新生成的PG当中
+   PGP的增加会引起部分PG的分布进行变化，但是不会引起PG内对象的变动
+3、
+
+
+
+
 
 
 
