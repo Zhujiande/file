@@ -544,7 +544,24 @@ smartctl -a -d megaraid,<device ID> /dev/***
 
 
 
-
-
+2020/2/25
+1、/etc/init.d/bc-sdn-master   是sdn控制器的服务
+   配置文件和日志在  /etc/bingosdn-master.d/  下
+2、 sdn控制器问题  
+  ovs-vsctl show | grep tcp -A 2 
+  Controller "tcp:172.24.1.1:6633"      （查看连接的是哪个节点）
+            is_connected: true         （检查连接控制器是否正确） 
+ 
+ ovs-vsctl set-controller br0 tcp:172.24.1.1     （吧控制器连接到中心节点去，这样就可以对本机的sdn控制器进行重启，升级等操作）
+ less /etc/bingosdn-master.d/bingosdn-master.conf   (里面可以查看中心节点是哪两个)
+ 对sdn做操作时，先把/etc/bingosdn-master.d/bingosdn.out   备份，里面输出的是报错信息，每次操作后都会重置
+ 处理完后，记得把控制器切回本机： ovs-vsctl set-controller br0 tcp:127.0.0.1:6633
+ 检查连接控制器是否成功：   ovs-vsctl show | grep tcp -A2    
+                          is_connected：  true
+ 3、
+                        
+                          
+  
+         
 
 
