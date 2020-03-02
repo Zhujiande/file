@@ -561,7 +561,8 @@ smartctl -a -d megaraid,<device ID> /dev/***
  3、
                         
                           
-  
+  2020/3/2
+  1、/var/log/messages报错：sshd[1139315]: error: kex_exchange_identification: Connection closed by remote host
          
 
 
