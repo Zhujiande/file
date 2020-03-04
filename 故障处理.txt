@@ -264,7 +264,7 @@ ceph osd rm 38
 2019/12/10
 1、ceph出现 HEALTH_ERR 1 scrub errors; Possible data damage: 1 pg inconsistent 
 1）ceph health detail      查看详细信息
-2）ceph osd find      找出pg异常所在osd的节点
+2）ceph osd find      
 3）systemctl stop ceph-osd@xx     停止该osd
 4）ceph-osd -i xx --flush-jounal      冲洗journal
 5）systemctl start ceph-osd@xx               
@@ -561,8 +561,34 @@ smartctl -a -d megaraid,<device ID> /dev/***
  3、
                         
                           
-  2020/3/2
-  1、/var/log/messages报错：sshd[1139315]: error: kex_exchange_identification: Connection closed by remote host
-         
+2020/3/2
+1、/var/log/messages报错：sshd[1139315]: error: kex_exchange_identification: Connection closed by remote host
+        
+2020/3/4
+1、redhat/centos 7.5默认内核版本存在一个比较严重的问题，一旦触发会导致系统崩溃重启，需升级内核版本至3.10.0-862.14.4.el7
+    触发原因：内核代码将Linux时间子系统中的高精度定时器(HRTIMER)抛出的一个信息定义为BUG_ON()引发系统内核崩溃重启
+    触发条件：尚不明确，怀疑跟CPU负载、并发等因素相关
+    影响系统：redhat/centos 7.5
+    问题定位：系统崩溃重启后，会在/var/crash/目录下生成vmcore信息，可查看vmcore-dmesg.txt文件，搜索关键字：kernel BUG at kernel/hrtimer.c:1236!
+    解决方案：升级内核版本至3.10.0-862.14.4.el7及以上
+    相关链接：https://access.redhat.com/solutions/3432391
+
+2、查看当前设置的启动版本：grub2-editenv  list 
+
+3、判断linux系统启动方式
+最简单地找出使用的是 UEFI 还是 BIOS 的方法是查找 /sys/firmware/efi 文件夹。如果使用的 BIOS 那么该文件夹不存在。
+
+4、parted  
+  start：0 
+  stop：-1  
+
+5、升级内核时 报依赖  shim软件包，可以卸载，这是管理UEFI启动的
+
+
+
+
+
+
+
 
 
