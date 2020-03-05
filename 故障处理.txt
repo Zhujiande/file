@@ -585,7 +585,13 @@ smartctl -a -d megaraid,<device ID> /dev/***
 5、升级内核时 报依赖  shim软件包，可以卸载，这是管理UEFI启动的
 
 
+2020/3/5
+1、如果sdn是连接两个中心节点的，网络异常时排查是否是数据不一致：
+curl http://10.20.1.211:8080/bingo/vnet/describeNetworkInterfaces    | wc -c
 
+2、如果网络不通，可以采用持续ping的方法，然后dump-flows ＋ ip  查看返回码，然后对比文件：F:\bingocloud！！！\sdn\drop_reason_txt
+
+3、mysql更换vip，，改config配置文件，重启mysql_daemon.sh  ，修改云平台虚拟ip
 
 
 
