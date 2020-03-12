@@ -594,6 +594,11 @@ curl http://10.20.1.211:8080/bingo/vnet/describeNetworkInterfaces    | wc -c
 3、mysql更换vip，，改config配置文件，重启mysql_daemon.sh  ，修改云平台虚拟ip
 
 
+2020/3/12
+1、
+ceph osd crush add-bucket rack-01 rack
+ceph osd crush move rack-01 root=default
+ceph osd crush move i-0b9cb8cf rack=rack-01
 
 
 
