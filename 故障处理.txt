@@ -600,6 +600,13 @@ ceph osd crush add-bucket rack-01 rack
 ceph osd crush move rack-01 root=default
 ceph osd crush move i-0b9cb8cf rack=rack-01
 
+2020/3/13
+1、bingofs磁盘满了会有以下几种情况：
+①chunkserver节点down掉，如果还有空间，可直接起服务，通知客户回收资源
+②chunkserver节点down掉，剩余空间为0%，，无法启动服务，通知客户回收资源，检查bingofs监控，等濒临丢失的数据块为0的时候，
+可以直接卸载，格式化磁盘，挂载（注意/etc/fstab文件），启服务，，若是检查日志发现无法连接master，可能是master有黑名单，使用bingofscsblacklist查看，
+若存在，可以直接使用该命令加ip地址，去掉黑名单
+③chunkserver节点down掉，剩余空间为0%，，可以启动服务，但是没有空间，所以无法校验数据，可以和情况②一样做
 
 
 
