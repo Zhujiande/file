@@ -609,4 +609,6 @@ ceph osd crush move i-0b9cb8cf rack=rack-01
 ③chunkserver节点down掉，剩余空间为0%，，可以启动服务，但是没有空间，所以无法校验数据，可以和情况②一样做
 
 
-
+2020/3/17
+1、云平台实例信息，7版本开始，可以
+http://CLCIP:8663/mkexcel.html
