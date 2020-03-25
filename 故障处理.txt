@@ -612,3 +612,13 @@ ceph osd crush move i-0b9cb8cf rack=rack-01
 2020/3/17
 1、云平台实例信息，7版本开始，可以
 http://CLCIP:8663/mkexcel.html
+
+
+2020/3/24
+1、ls /sys/firmware/efi   如果由着个efi文件，则说说明系统是UEFI启动的
+   云平台标准安装的话，，UEFI模式的内核引导文件在/dev/sda2里面，先挂出来，，然后使用  grub2-mkconfig  -o   文件路径/    更新，然后重启
+
+2、
+
+
+
