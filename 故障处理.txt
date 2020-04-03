@@ -618,7 +618,31 @@ http://CLCIP:8663/mkexcel.html
 1、ls /sys/firmware/efi   如果由着个efi文件，则说说明系统是UEFI启动的
    云平台标准安装的话，，UEFI模式的内核引导文件在/dev/sda2里面，先挂出来，，然后使用  grub2-mkconfig  -o   文件路径/    更新，然后重启
 
-2、
+2020/4/3
+1、升级内核后，有可能没有nbd模块，创建虚拟机，存储卷失败，，比如从3.10.0-862.el7.x86_64升级到3.10.0-862.14.4.el7.x86_64
+cp /lib/modules/3.10.0-862.el7.x86_64/kernel/drivers/block/nbd.ko /lib/modules/3.10.0-862.14.4.el7.x86_64/kernel/drivers/block/.
+depmod -a
+
+2、定位磁盘
+查看磁盘是否有坏道，以及E：S号：
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlist -a0 | grep -iE "error|slot|enclosure"
+此时可以根据E：S直接定位，让有问题磁盘灯闪烁：
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -start -physdrv[64:2] -a0 # 让slot 2的硬盘灯闪烁
+# /opt/MegaRAID/MegaCli/MegaCli64 -pdlocate -stop -physdrv[64:2] -a0 # 停止闪烁
+
+通过slot number号定位对应的盘符：
+# /opt/MegaRAID/MegaCli/MegaCli64 -ldpdinfo -a0  #找出slot 2对应的virtual driver ID
+# ll /dev/disk/by-path/  --->  四元组的第三个数值与 megacli -ldpdinfo -a0 | grep  virtual driver： ？数值对应   #可找出对应的盘符
+
+
+
+
+
+
+
+
+
+
 
 
 
