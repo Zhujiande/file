@@ -637,12 +637,26 @@ depmod -a
 
 
 
+2020/4/10
+1、实例无法vnc，，libvirtd卡住了，也可能是存储卡住了导致的，，
+   比如使用ceph的，，可使用 rbd -m （Monip）68.208.3.11 info  instances/i-3SEFKU8JH.instance 看该实例镜像信息
+   如果卡住了可加debug参数，稍等一会看具体日志 ： 
+   rbd -m 68.208.3.11 info instances/i-FDA82D47.instance --debug_objecter 20/5 --debug_rados 20/5 --debug_rbd 20/5 -debug_osd 20/5 --debug_mon 20/5
 
 
+2、物理机重启后，ceph起不来：检查日志，看数据盘是否挂载，，没有挂载的话 原因是什么，，检查权限等
+   如果是升到12.2.12的版本，，vim /usr/lib/systemd/system/ceph-osd@.servce  删除protect那三行（p开头的）, 然后 systemctl  daemon-reload
+   检查/lib/ceph目录下，，应该要有三个文件：ceph_common.sh ,ceph-osd-prestart-ex.sh ,ceph-osd-prestart.sh
+    
 
-
-
-
+3、确定数据盘和journal盘对应osd号关系
+如果只有个别osd异常，可通过隔壁的进行猜测
+如果都出现异常，，数据盘可通过挂载文件，然后查看whoami文件看osd号，，
+                journal盘可通过打印磁盘头16进制文件，和ceph osd dump | grep osd.  对应。。。
+ eg：
+ dd if=/dev/sdb1 bs=1 count=512 | hexdump -C
+ ceph osd dump | grep osd.2
+ 
 
 
 
