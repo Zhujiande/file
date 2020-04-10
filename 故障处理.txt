@@ -658,5 +658,9 @@ depmod -a
  ceph osd dump | grep osd.2
  
 
+4、品高云虚拟机扩容系统盘，先关机，然后后台找到镜像，比如/bcshare/cluster/instance/i-EE44EFDA/instance ,然后使用qemu-img  resize  instance  +120G扩容镜像，windows的话进磁盘管理，linux的话再扩文件系统
+
+
+5、
 
 
