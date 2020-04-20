@@ -661,6 +661,13 @@ depmod -a
 4、品高云虚拟机扩容系统盘，先关机，然后后台找到镜像，比如/bcshare/cluster/instance/i-EE44EFDA/instance ,然后使用qemu-img  resize  instance  +120G扩容镜像，windows的话进磁盘管理，linux的话再扩文件系统
 
 
-5、
+2020/4/20
+1、云平台升级到8.0后，，S3可能会出现无法使用的情况，修改配置文件，dbname可能会有所变化
+vi /usr/local/bingocloud-s3/conf/bcs3d.conf
+DBDParams host=10.200.66.98,port=3306,user=bingocloud,pass=y7nB3E%56+mu,dbname=bingocloud_global
+
+如果s3的界面打不开的话，就再加上vi /opt/bingocloud/latest/output/config/clc.cfg
+末尾添加：
+{s3_sign,"v2"}.
 
 
