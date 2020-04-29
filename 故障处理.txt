@@ -671,3 +671,32 @@ DBDParams host=10.200.66.98,port=3306,user=bingocloud,pass=y7nB3E%56+mu,dbname=b
 {s3_sign,"v2"}.
 
 
+2020/4/29
+1、报警：  too many PGs per OSD处理
+自 ceph版本Luminous v12.2.x以后，参数mon_pg_warn_max_per_osd变更为mon_max_pg_per_osd,默认值也从300变更为200，修改该参数后，也由原来的重启ceph-mon服务变为重启ceph-mgr服务。
+
+
+2、实例迁移问题；
+不考虑内核，qemu，libvirt版本问题，可通过以下方法实现实例热迁移
+如：
+[root@172.24.1.1 ~]# /usr/libexec/qemu-kvm -machine help
+Supported machines are:
+pc                   RHEL 7.3.0 PC (i440FX + PIIX, 1996) (alias of pc-i440fx-rhel7.3.0)
+pc-i440fx-rhel7.3.0  RHEL 7.3.0 PC (i440FX + PIIX, 1996) (default)
+pc-i440fx-rhel7.2.0  RHEL 7.2.0 PC (i440FX + PIIX, 1996)
+pc-i440fx-rhel7.1.0  RHEL 7.1.0 PC (i440FX + PIIX, 1996)
+pc-i440fx-rhel7.0.0  RHEL 7.0.0 PC (i440FX + PIIX, 1996)
+rhel6.6.0            RHEL 6.6.0 PC
+rhel6.5.0            RHEL 6.5.0 PC
+rhel6.4.0            RHEL 6.4.0 PC
+rhel6.3.0            RHEL 6.3.0 PC
+rhel6.2.0            RHEL 6.2.0 PC
+rhel6.1.0            RHEL 6.1.0 PC
+rhel6.0.0            RHEL 6.0.0 PC
+q35                  RHEL-7.3.0 PC (Q35 + ICH9, 2009) (alias of pc-q35-rhel7.3.0)
+pc-q35-rhel7.3.0     RHEL-7.3.0 PC (Q35 + ICH9, 2009)
+none                 empty machine
+
+如上图所示，可以将虚拟机xml文件 machines设置为集群内支持的最低的那个：如pc-i440fx-rhel7.0.0
+
+
